@@ -262,13 +262,42 @@ head/hair (8), top (8), accessory (8, including none). Composited at draw time,
 art cost is additive — 4 poses × 4 layer types. Pre-baking would turn this into
 4,096 sprites per pose and kill the project.
 
-**Pipeline:** generate stills → deterministic downsample to the pixel grid →
-quantize to **one project palette** → hand cleanup in Aseprite/LibreSprite.
-The single shared palette is what makes generated assets look like one world.
+**Palette: [Atropoeia](https://lospec.com/palette-list/atropoeia), 48 colours.**
+Settled 2026-10-30. Committed at `tools/art/palette.hex` as the single source of
+truth. Every asset quantizes to this and nothing else — one shared palette is
+what makes generated assets look like one world rather than fourteen, and it is
+the most expensive decision to reverse, because every asset ever quantized would
+need regenerating.
 
-**Model licences matter as much as output.** FLUX.1-schnell (Apache-2.0), SDXL +
-pixel-art LoRAs (OpenRAIL-M), Qwen-Image (Apache-2.0) are fine.
-**FLUX.1-dev is non-commercial and would poison the paid tier — do not use it.**
+**Pipeline:** generate stills → deterministic nearest-neighbour downsample to
+the pixel grid → quantize to the palette, no dithering → hand cleanup in
+Aseprite or LibreSprite. The deterministic middle two steps are what turn a
+diffusion model's high-resolution *picture of* pixel art into actual pixel art
+on a real grid.
+
+**Generation environment:** Manjaro Linux, RTX 5090 (32 GB). ComfyUI installed
+2026-10-30. SDXL is the intended checkpoint, chosen because the pixel-art LoRA
+ecosystem for SDXL is by far the richest; FLUX.1-schnell (Apache-2.0) is the
+fallback. A *LoRA* is a small add-on file that biases a base model toward one
+style without retraining it.
+
+**Model and LoRA licences matter as much as output**, because the commercial
+surface is art packs:
+
+- SDXL base (OpenRAIL-M) and FLUX.1-schnell (Apache-2.0) permit commercial use.
+- **FLUX.1-dev is non-commercial. Do not use it.**
+- **LoRAs carry their own individual licences and many Civitai LoRAs are
+  non-commercial or no-derivatives.** Check each one, record the licence and
+  source URL in `tools/art/PROMPTS.md`, and if terms are unclear, do not use it.
+
+**A conformance check, not a convention.** `tools/art/verify.py` fails CI on any
+non-palette colour, partial alpha, or off-grid dimension. This is the cheap
+mechanism that keeps a generated asset set coherent over months without anyone
+policing it by eye.
+
+**Expect the avatars to need hand cleanup.** Diffusion models do not make
+deliberate decisions at 28px, and at that size every pixel is one. The room and
+window views survive the pipeline far better than characters do.
 
 **Shaders carry the motion.** Rain, water, fire flicker, god rays, fog, cloth
 sway, CRT glow, parallax, candle gutter — all procedural, zero frames, and
@@ -299,17 +328,25 @@ have to write a sentence about third-party data sharing.
 Web only. Ship this, put it in front of twenty people, and watch whether anyone
 stays past the novelty.
 
-- One public room plus private rooms
-- Two environments
-- Demo users only — no accounts, no moderation
-- Preset chat bubbles (no VO yet)
-- Seat-based avatars, three poses
-- Three seats: couch, beanbag, hammock
-- Five catalogue titles with timestamp sync
-- Ambient audio bed
-- Guestbook
-- Drift-off mode
-- Blurred attract-mode room behind the start UI
+| Item | Issue | State |
+|---|---|---|
+| One public room | — | done (skeleton) |
+| Private rooms by code | [#31](https://github.com/508-dev/coze-room/issues/31) | |
+| Two window views | [#55](https://github.com/508-dev/coze-room/issues/55) | |
+| Demo users only — no accounts, no moderation | — | done by omission |
+| Preset chat bubbles, no voice-over | [#60](https://github.com/508-dev/coze-room/issues/60) | |
+| Seat-based avatars, four poses | [#54](https://github.com/508-dev/coze-room/issues/54) | seats done, poses not drawn |
+| Three seats: couch, beanbag, hammock | — | done (four, as data) |
+| Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | |
+| Ambient audio bed | [#58](https://github.com/508-dev/coze-room/issues/58) | |
+| Guestbook | [#56](https://github.com/508-dev/coze-room/issues/56) | protocol stubbed, nothing populates it |
+| Drift-off mode | — | done (throttle + dim) |
+| Blurred attract-mode start screen | [#59](https://github.com/508-dev/coze-room/issues/59) | |
+
+Supporting work, all `v0.1-blocker`: the art pipeline
+([#50](https://github.com/508-dev/coze-room/issues/50)–[#53](https://github.com/508-dev/coze-room/issues/53))
+and hosting
+([#61](https://github.com/508-dev/coze-room/issues/61)).
 
 The riskiest assumption is not technical. It is **"a still room containing
 sleeping strangers is pleasant to be in."** That is testable in weeks, before

@@ -15,7 +15,7 @@ sleepover where someone put the TV on at 2am.
 
 **Stillness is the aesthetic, not a failure state.** Avatars visibly fall asleep.
 The room is designed to be beautiful when nobody is doing anything. Liveness
-comes from ambient motion and overnight traces, not from conversation.
+comes from ambient motion and the overnight guestbook, not from conversation.
 
 This matters because the central design tension is unavoidable: within ~20
 minutes of a room filling, everyone in it is unconscious. Designing for a chatty
@@ -307,7 +307,7 @@ stays past the novelty.
 - Three seats: couch, beanbag, hammock
 - Five catalogue titles with timestamp sync
 - Ambient audio bed
-- Trace board
+- Guestbook
 - Drift-off mode
 - Blurred attract-mode room behind the start UI
 
@@ -315,9 +315,9 @@ The riskiest assumption is not technical. It is **"a still room containing
 sleeping strangers is pleasant to be in."** That is testable in weeks, before
 the art budget, before accounts, before moderation.
 
-The two things not to cut even from v0.1 are **drift-off mode** and the **trace
-board** — they are the only parts that are specifically about sleep. Without
-them we have built a cosy room, which already exists twice.
+The two things not to cut even from v0.1 are **drift-off mode** and the
+**guestbook** — they are the only parts that are specifically about sleep.
+Without them we have built a cosy room, which already exists twice.
 
 Order after v0.1: accounts → moderation → phrase system with VO → Android.
 Moderation must exist before strangers can talk to each other; the phrase system

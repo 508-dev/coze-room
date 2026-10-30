@@ -21,7 +21,7 @@ room state to Redis, run N processes, route by room id.
 ## 2. Stillness is the aesthetic
 
 **Decision:** the room must be beautiful when nobody is doing anything. Ambient
-motion and overnight traces carry liveness, not conversation.
+motion and an overnight guestbook carry liveness, not conversation.
 
 **Why:** within ~20 minutes of a room filling, everyone in it is asleep.
 Designing for a chatty room produces a chatty room, and it will be empty.

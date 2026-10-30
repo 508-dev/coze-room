@@ -1,7 +1,7 @@
 import type {
   AvatarLook,
+  GuestbookEntry,
   MediaState,
-  NightTrace,
   Occupant,
   RoomSpec,
   ServerMessage,
@@ -38,7 +38,7 @@ export class Room {
   readonly spec: RoomSpec;
   private members = new Map<string, Member>();
   private media: MediaState = { itemId: null, startedAt: 0 };
-  private traces: NightTrace[] = [];
+  private guestbook: GuestbookEntry[] = [];
 
   constructor(spec: RoomSpec) {
     this.spec = spec;
@@ -64,7 +64,7 @@ export class Room {
         room: this.spec,
         occupants: this.occupants,
         media: this.media,
-        traces: this.traces,
+        guestbook: this.guestbook,
       } satisfies ServerMessage),
     );
     return occupant;

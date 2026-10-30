@@ -6,6 +6,7 @@ repos:
         entry: bun run format:check
         language: system
         pass_filenames: false
-        # Keep the hook scoped to root tooling and the TypeScript stack. Add
-        # stack-specific hooks only after selecting that stack for a target repo.
-        files: ^(stacks/typescript/|stacks/.*/package\.json$|scripts/|biome\.json$|package\.json$)
+        # Scoped to source and root tooling. Keep this regex in step with the
+        # workspace layout in package.json -- if it drifts, the hook silently
+        # stops covering most of the repo.
+        files: ^(apps/|packages/|scripts/|biome\.json$|package\.json$|tsconfig\.json$)

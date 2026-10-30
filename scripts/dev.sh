@@ -48,21 +48,21 @@ export WEB_HOST="${WEB_HOST:-127.0.0.1}"
 # Root dev runs only language-neutral infra plus the TypeScript convention
 # watcher. Runtime-specific services, such as the Python API, live in stacks and
 # should be started from their stack scripts when selected for a target repo.
-echo "508 Devkit local stack"
+echo "Dormouse local stack"
 echo "Assigned worktree ports:"
 ./scripts/worktree-ports.sh env | sed 's/^/  /'
 echo
 echo "Starting services"
-echo "  Web: ${WEB_URL} (framework-neutral TypeScript watcher)"
+echo "  Client: ${WEB_URL}"
+echo "  Server: 127.0.0.1:${API_PORT}"
 echo "  Postgres: 127.0.0.1:${POSTGRES_HOST_PORT}"
-echo "  Redis: 127.0.0.1:${REDIS_HOST_PORT}"
 echo
 
-./scripts/docker-compose.sh up -d postgres redis
+./scripts/docker-compose.sh up -d postgres
 
 detect_js_runner() {
-  if [ -n "${DEVKIT_JS_RUNNER:-}" ]; then
-    printf '%s\n' "$DEVKIT_JS_RUNNER"
+  if [ -n "${DORMOUSE_JS_RUNNER:-}" ]; then
+    printf '%s\n' "$DORMOUSE_JS_RUNNER"
     return
   fi
 
@@ -234,21 +234,24 @@ fi
 
 cleanup() {
   if [ -n "${WEB_PID:-}" ]; then kill "$WEB_PID" 2>/dev/null || true; fi
+  if [ -n "${SERVER_PID:-}" ]; then kill "$SERVER_PID" 2>/dev/null || true; fi
 }
 trap cleanup INT TERM EXIT
 
+# Two processes: the Vite client and the WebSocket game server. Both are
+# started here because neither is useful alone.
 case "$JS_RUNNER" in
   bun)
-    bun run --cwd stacks/typescript dev &
-    ;;
-  pnpm)
-    pnpm -C stacks/typescript run dev &
+    bun run --cwd apps/server dev &
+    SERVER_PID=$!
+    bun run --cwd apps/client dev &
+    WEB_PID=$!
     ;;
   *)
-    echo "Unsupported DEVKIT_JS_RUNNER=${JS_RUNNER}; expected bun or pnpm." >&2
+    echo "Unsupported DORMOUSE_JS_RUNNER=${JS_RUNNER}; expected bun." >&2
     exit 1
     ;;
 esac
-WEB_PID=$!
 
-wait "$WEB_PID"
+# Exit as soon as either process dies, rather than hanging on the survivor.
+wait -n "$SERVER_PID" "$WEB_PID" 2>/dev/null || wait "$WEB_PID"

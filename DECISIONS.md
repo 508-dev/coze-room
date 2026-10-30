@@ -1,85 +1,113 @@
-# 508 Devkit Decisions
+# Decisions
 
-Last reviewed: 2026-06-03
+Decision authority for Dormouse. Each entry is a decision, why it exists, and
+when to deviate. Reasoning lives in [`docs/design.md`](docs/design.md); this is
+the short form an agent or contributor can scan.
 
-This is the constitution for the devkit. Use it as the decision authority; use files in this repo as examples or frozen primitives according to the decision below.
+Supersede an entry by editing it and saying what changed.
 
-## Apply The Gold/Filler Test
+## 1. Design for 100 concurrent users
 
-Decision: keep and test files that agents would not reliably reproduce correctly without this repo. Treat ordinary app code as disposable examples.
+**Decision:** 100 concurrent is a stated ceiling, not an aspiration. One VPS,
+one process, room state in memory, no horizontal scaling.
 
-Why: agents can generate plausible FastAPI handlers, workers, and frontend apps. They are less reliable at reproducing devkit-specific topology, safety policy, worktree behavior, and operational memory conventions.
+**Why:** Outgrowing it and rewriting the server is cheaper than pre-building for
+scale we do not have. Rec Room raised $294M and died because costs outran
+revenue.
 
-Deviate when: a real target repo needs product code. Generate it for that repo instead of copying placeholder app code from the devkit.
+**Deviate when:** we actually approach the ceiling. The path is known — move
+room state to Redis, run N processes, route by room id.
 
-## Dependency Cooldowns
+## 2. Stillness is the aesthetic
 
-Decision: use dependency cooldowns in every package manager that supports them.
+**Decision:** the room must be beautiful when nobody is doing anything. Ambient
+motion and overnight traces carry liveness, not conversation.
 
-Why: new package versions are a supply-chain risk window. The exact cooldowns are non-obvious and should converge across repos.
+**Why:** within ~20 minutes of a room filling, everyone in it is asleep.
+Designing for a chatty room produces a chatty room, and it will be empty.
 
-Deviate when: a security fix or production incident requires an immediate update. Document the exception in the PR.
+**Deviate when:** never, for the default room. A louder "awake" room type is a
+separate product decision.
 
-## Locked Installs
+## 3. No YouTube
 
-Decision: commit lockfiles and use frozen or locked installs in CI.
+**Decision:** media is mirrored public-domain video served from R2.
 
-Why: agents and humans need reproducible dependency resolution.
+**Why:** YouTube's Developer Policies conflict on at least four clauses —
+background/screen-off audio (III.I.9), overlays on the player (RMF),
+server-automated playback (III.I.2), and charging for a tier containing the
+player (III.F.3.a). There is no co-watching API to apply to.
 
-Deviate when: a repo is intentionally a library template without a runnable dependency graph. Document why no lockfile is committed.
+**Deviate when:** YouTube ships a sanctioned co-watching API. Not before.
 
-## Bun First, pnpm First-Class
+## 4. No TTS engine
 
-Decision: show Bun first for JavaScript workspaces while keeping pnpm first-class for teams, repos, or large workspaces that prefer pnpm-specific monorepo behavior.
+**Decision:** chat is a fixed palette of preset phrases with recorded
+voice-over. Free text is visible and never spoken.
 
-Why: Bun is fast and simple for greenfield repos, and the author prefers it. That preference should not imply pnpm is second-class or wrong for new projects.
+**Why:** it structurally eliminates the SSML-injection attack class, the
+voice-licence minefield, and the EU AI Act Article 50 question. Platforms
+punish the *absent room owner* for what third parties make a room say.
 
-Deviate when: the target repo already uses pnpm, npm, Yarn, or another package manager for a clear reason. Do not churn package managers during unrelated work.
+**Deviate when:** arbitrary TTS becomes a premium feature with per-listener
+opt-in and an existing trust relationship. Revisit the injection surface first.
 
-## Frontend Framework Neutrality
+## 5. Seat-based movement
 
-Decision: do not choose Next.js, Vite, TanStack Start, Astro, Expo, or any other frontend framework in root defaults.
+**Decision:** avatars do not walk. You tap a seat and transition there.
 
-Why: frontend framework choice depends on product shape, deployment target, routing, rendering model, and team familiarity.
+**Why:** directional walk cycles are the most expensive animation in the project
+and the one category we cannot generate. Seat-based also makes netcode trivial.
 
-Deviate when: the target repo has already chosen a framework or the user explicitly asks for one.
+**Deviate when:** there is an art budget and someone asks for it. It is on the
+backlog, deliberately.
 
-## Host Apps, Compose Infra
+## 6. Gate capability, not presence
 
-Decision: run app processes on the host and infrastructure through Docker Compose during local development.
+**Decision:** anyone can enter and lie down, including without an account.
+Chatting, queueing and changing the environment unlock with account tenure.
 
-Why: host app processes are easier for agents to inspect and faster for reload loops. Compose still provides concrete examples for local infrastructure such as databases and caches.
+**Why:** signup friction does not stop abuse; capability gating does. This is
+VRChat's trust-level pattern, which demonstrably works.
 
-Deviate when: deployment parity, binary dependencies, or team policy require full-container development. Put that in docs and scripts explicitly.
+**Deviate when:** a specific abuse pattern proves presence itself is the vector.
 
-## Deterministic Worktree Ports
+## 7. Privacy-preserving accounts
 
-Decision: derive local ports from the absolute worktree path.
+**Decision:** username and password, no email required. One-time recovery code
+at signup. Optional email later, for recovery only.
 
-Why: sibling worktrees should run concurrently without hand-editing `.env` files.
+**Why:** email is near-worthless as anti-spam (throwaways are free) and its only
+real value is recovery, which the code provides without collecting anything.
 
-Deviate when: a platform assigns ports dynamically. Preserve the script for local development unless it is truly irrelevant.
+**Deviate when:** never collect an email for a purpose the user did not choose.
 
-## `.context/` Workspace Memory
+## 8. No third-party analytics
 
-Decision: keep `.context/` gitignored as workspace-local operational memory for humans and agents. Do not ship it as tracked template content.
+**Decision:** no analytics SDK of any kind. Metrics derive from our own server
+logs.
 
-Why: architecture notes, decisions, failures, runbooks, and summaries prevent repeated failed approaches and preserve local reasoning.
+**Why:** we run the server, so every connection already passes through it. This
+avoids F-Droid's `Tracking` anti-feature and keeps the privacy policy short.
 
-Deviate when: information is durable, user-facing, or contributor-facing. Put that in README, docs, or official project documentation instead.
+**Deviate when:** never, for client-side telemetry.
 
-## GitHub Hygiene
+## 9. Open core
 
-Decision: include small issue/PR templates, least-privilege workflows, pinned action SHAs, and Renovate cooldown policy. Keep Gitleaks and Dependency Review as opt-in extras: Gitleaks can create noisy baseline findings, and Dependency Review depends on GitHub's dependency graph and is primarily vulnerability/license/change reporting rather than active supply-chain attack detection.
+**Decision:** GPL-3.0 client, AGPL-3.0 server, commercial art and audio packs.
 
-Why: collaboration and security hygiene are broadly useful and easy to drift across repos.
+**Why:** code is free; the commercial surface is content. Licensed shows are
+permanently out of scope — they require DRM, which is incompatible with
+everything else here.
 
-Deviate when: a repo does not use GitHub or has a stronger existing platform policy.
+**Deviate when:** never without re-reading `COPYRIGHT.md` and the licence
+constraints on bundled assets.
 
-## Currency
+## 10. Honest safety claims
 
-Decision: the devkit owns topology and policy, not permanent version freshness.
+**Decision:** describe moderation exactly as implemented, and no more.
 
-Why: frozen files age. Agents should preserve the repo's decisions while verifying current tool versions, action SHAs, and API docs when applying the devkit to a target repo.
+**Why:** the actionable legal risk for a small app is overclaiming, not failing
+to stop all harm. NGL was fined $5M over a false AI-moderation claim.
 
-Deviate when: working fully offline. In that case, copy the known-good pinned versions and document that currency was not verified.
+**Deviate when:** never.

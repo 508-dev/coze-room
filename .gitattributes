@@ -1,0 +1,25 @@
+* text=auto eol=lf
+
+# Binary assets. Git LFS from the start -- a pixel-art project accumulates
+# sprite atlases and audio loops fast, and retrofitting LFS after they are in
+# history means rewriting it.
+*.png   filter=lfs diff=lfs merge=lfs -text
+*.webp  filter=lfs diff=lfs merge=lfs -text
+*.gif   filter=lfs diff=lfs merge=lfs -text
+*.aseprite filter=lfs diff=lfs merge=lfs -text
+*.ase   filter=lfs diff=lfs merge=lfs -text
+*.ogg   filter=lfs diff=lfs merge=lfs -text
+*.mp3   filter=lfs diff=lfs merge=lfs -text
+*.m4a   filter=lfs diff=lfs merge=lfs -text
+*.wav   filter=lfs diff=lfs merge=lfs -text
+*.mp4   filter=lfs diff=lfs merge=lfs -text
+*.webm  filter=lfs diff=lfs merge=lfs -text
+*.woff2 filter=lfs diff=lfs merge=lfs -text
+
+# Media files themselves are mirrored to R2 and never committed. Only the
+# manifest and the small in-scene GIF previews live here.
+
+# Shaders are text but should not be reformatted by JS tooling.
+*.glsl  text eol=lf linguist-language=GLSL
+*.vert  text eol=lf linguist-language=GLSL
+*.frag  text eol=lf linguist-language=GLSL

@@ -10,7 +10,7 @@ Local development follows the pattern used across existing projects:
 
 ```bash
 ./scripts/worktree-ports.sh env
-./scripts/docker-compose.sh up -d postgres redis
+./scripts/docker-compose.sh up -d postgres
 ./scripts/dev.sh
 ./scripts/check-all.sh
 ```
@@ -73,7 +73,7 @@ same-worktree processes as reclaimable; a repo can run unrelated listeners from
 the same checkout.
 
 Avoid reclaiming Docker-owned infrastructure ports from the host dev script.
-For Postgres, Redis, MinIO, and similar Compose services, use stable
+For Postgres and similar Compose services, use stable
 `COMPOSE_PROJECT_NAME` with `./scripts/docker-compose.sh up` / `down` so
 same-worktree runs are idempotent. If an infrastructure port is held by
 something else, report the owner and ask the developer to stop it or change the

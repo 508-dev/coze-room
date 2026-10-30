@@ -1,28 +1,35 @@
 # Observability
 
-508 Devkit includes environment names for logs, Sentry, and OTEL, but does not force a telemetry vendor or SDK into every project.
+## Position
 
-Root defaults:
+**We ship no third-party analytics or telemetry SDK.** Not in the client, not
+in the Android build.
 
-- `LOG_LEVEL`
-- `SENTRY_DSN`
-- `OTEL_EXPORTER_OTLP_ENDPOINT`
-- `OTEL_SERVICE_NAME`
+This is deliberate. We run the server, so every connection, session length,
+room occupancy, queue action and disconnect already passes through
+infrastructure we control. Deriving usage metrics from our own logs gives us
+what we need, avoids F-Droid's `Tracking` anti-feature, and means the privacy
+policy has no third-party data-sharing section to write.
 
-Use `example_shared.observability.configure_logging` as the minimal runtime hook. Add Sentry or OpenTelemetry SDK initialization only after the target service chooses those dependencies.
+## Environment names
 
-## When To Add SDKs
+`.env.example` carries `SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT` and
+`OTEL_SERVICE_NAME` so a destination can be wired up later without an
+`.env.example` change. They are empty and no SDK is installed.
 
-Add Sentry when the project has a real error reporting destination and release/environment naming.
+If error reporting is ever added, it goes **server-side only**. A crash
+reporter in a client that sits in someone's bedroom all night is exactly the
+kind of thing this project should not ship.
 
-Add OpenTelemetry when the project has a collector, trace sampling policy, and service naming convention.
+## What to measure
 
-Keep SDK initialization in one shared helper per runtime so API, worker, and job processes behave consistently.
+The questions worth answering are about whether the core feeling works:
 
-## Agent Notes
+- Session length, and specifically how many sessions end in sleep rather than
+  a deliberate exit.
+- Whether people return the next night.
+- Room occupancy over the night — does anyone arrive to a room that already has
+  sleepers in it, and do they stay?
+- Queue participation versus passive listening.
 
-- Do not add telemetry SDK dependencies just because the env vars exist.
-- Add Sentry, OTEL, metrics, or log shipping only after the target repo has a
-  destination and naming convention.
-- Keep one runtime-local initialization helper so services do not configure
-  observability differently by accident.
+All of these are answerable from connection logs.

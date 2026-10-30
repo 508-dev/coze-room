@@ -3,7 +3,15 @@
   "root": true,
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/.venv", "!**/.claude", "!**/.mypy_cache", "!**/.pytest_cache"]
+    "includes": [
+      "**",
+      "!**/.claude",
+      "!**/assets/**",
+      "!**/packs/**",
+      "!**/catalogue/media/**",
+      "!**/*.glsl",
+      "!tools/android-release/**"
+    ]
   },
   "formatter": {
     "enabled": true,

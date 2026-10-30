@@ -1,40 +1,42 @@
-# Security Policy
+# Security
 
-## Reporting Vulnerabilities
+## Reporting a vulnerability
 
-Do not open public issues for vulnerabilities or leaked secrets.
+Email **caleb@508.dev** with the details and a way to reach you. Please do not
+open a public issue for anything exploitable.
 
-Report security concerns to the project maintainers through the private channel configured for the target repository. When applying this devkit to a new repository, replace this paragraph with the real reporting address or process.
+We will acknowledge within a few days. This is a small project run by a small
+number of people, so please be patient — but if something is actively being
+abused, say so in the subject line and it will jump the queue.
 
-## Secret Handling
+## Scope
 
-- Keep secrets in environment variables or encrypted files.
-- Never commit real `.env` files, tokens, private keys, credentials, or production data.
-- Use `.env.example` for documented configuration only.
-- Use `.sops.yaml.example` as a starting point when a repository needs encrypted files.
+Things we especially want to hear about:
 
-## Dependency Policy
+- Anything that lets one user make another user's client play unexpected audio.
+  This app runs unattended in people's bedrooms while they sleep; audio is the
+  highest-severity surface we have.
+- Anything that bypasses the block, ban, or room-capacity controls.
+- Anything that exposes one user's identity, device id, or private room code to
+  another.
+- Server-side issues: authentication bypass, room-state injection, media
+  queueing on behalf of another user.
 
-This devkit uses dependency cooldowns and locked installs:
+## Practices
 
-- Bun: `minimumReleaseAge = 604800`.
-- uv: `exclude-newer = "P7D"` when a Python workspace is present and uv is
-  `0.9.17` or newer.
-- Renovate: `minimumReleaseAge = "7 days"`.
-- CI should use frozen or locked installs.
+- Secrets live in environment variables, never in code. See
+  [`docs/secrets.md`](docs/secrets.md).
+- Dependencies carry a 7-day minimum release age
+  (`bunfig.toml`, `renovate.json`) to blunt supply-chain attacks.
+- CI pins third-party actions to full commit SHAs and runs with
+  `contents: read`.
+- We ship no third-party analytics or tracking SDKs, so there is no third-party
+  data-sharing surface to audit.
 
-## GitHub Actions
+## What we do not claim
 
-Workflows should use least-privilege permissions, pinned action SHAs, `persist-credentials: false` where practical, and `harden-runner` in audit or block mode.
-
-## Agent Notes
-
-- Do not leave the placeholder reporting channel in a real repository.
-- Prefer GitHub native secret scanning and push protection where available.
-- Add `extras/github/gitleaks.yml.example` only when maintainers want CI secret
-  scanning and can triage findings.
-- Add `extras/github/dependency-review.yml.example` only when dependency graph
-  reporting is desired and enabled.
-- Check `uv --no-config --version` before adding relative uv cooldowns to a
-  downstream repo. Ask before upgrading uv; do not leave old uv clients with
-  unparseable `P7D` or `7 days` config.
+We do not use automated content moderation, AI or otherwise. Moderation is a
+report queue reviewed by a human roughly weekly, plus per-user blocking,
+vote-kick, and a room host who can remove people in the moment. We say this
+plainly because overclaiming safety capabilities is both dishonest and, for a
+small operator, the larger legal risk.

@@ -166,7 +166,7 @@ apply_primary_port_reservation() {
 
 validate_unique_ports() {
   used=" "
-  for port in "$API_PORT" "$WEB_PORT" "$WORKER_HEALTH_PORT" "$POSTGRES_HOST_PORT" "$REDIS_HOST_PORT" "$OTEL_HTTP_PORT"; do
+  for port in "$API_PORT" "$WEB_PORT" "$WORKER_HEALTH_PORT" "$POSTGRES_HOST_PORT" "$OTEL_HTTP_PORT"; do
     if is_used_port "$port" "$used"; then
       echo "worktree port reservation produced duplicate port ${port}; adjust WORKTREE_PRIMARY_PORT, WORKTREE_PRIMARY_PORT_TARGET, or WORKTREE_PORT_BLOCK_*" >&2
       return 1
@@ -178,8 +178,8 @@ validate_unique_ports() {
 calculate_ports() {
   if base="$(reserved_block_start)"; then
     size="$(reserved_block_size)"
-    if [ "$size" -lt 6 ]; then
-      echo "WORKTREE_PORT_BLOCK_SIZE must be at least 6" >&2
+    if [ "$size" -lt 5 ]; then
+      echo "WORKTREE_PORT_BLOCK_SIZE must be at least 5" >&2
       return 1
     fi
     # A reserved block is usually small, so use compact offsets inside it.
@@ -193,27 +193,24 @@ calculate_ports() {
     used="${used}${WORKER_HEALTH_PORT} "
     POSTGRES_HOST_PORT="$(unused_port_in_block "$((base + 3))" "$end" "$used")"
     used="${used}${POSTGRES_HOST_PORT} "
-    REDIS_HOST_PORT="$(unused_port_in_block "$((base + 4))" "$end" "$used")"
-    used="${used}${REDIS_HOST_PORT} "
-    OTEL_HTTP_PORT="$(unused_port_in_block "$((base + 5))" "$end" "$used")"
+    OTEL_HTTP_PORT="$(unused_port_in_block "$((base + 4))" "$end" "$used")"
   else
     base="$(port_block)"
     # Offsets are intentionally sparse. Future services can claim unused slots
-    # without changing existing ports for API, web, database, or cache examples.
+    # without changing existing ports for API, web, or database. Offset +50 is
+    # free (it was Redis) if a second datastore is ever needed.
     API_PORT="$(chrome_safe_port "$((base + 20))")"
     WEB_PORT="$(chrome_safe_port "$((base + 30))")"
     WORKER_HEALTH_PORT="$((base + 35))"
     POSTGRES_HOST_PORT="$((base + 40))"
-    REDIS_HOST_PORT="$((base + 50))"
     OTEL_HTTP_PORT="$((base + 80))"
   fi
 
   apply_primary_port_reservation
   validate_unique_ports
 
-  POSTGRES_URL="postgresql://app:app@127.0.0.1:${POSTGRES_HOST_PORT}/app"
+  POSTGRES_URL="postgresql://dormouse:dormouse@127.0.0.1:${POSTGRES_HOST_PORT}/dormouse"
   DATABASE_URL="$POSTGRES_URL"
-  REDIS_URL="redis://127.0.0.1:${REDIS_HOST_PORT}/0"
   WEB_URL="http://127.0.0.1:${WEB_PORT}"
   WEB_API_BASE_URL="http://127.0.0.1:${API_PORT}"
   OTEL_EXPORTER_OTLP_ENDPOINT="http://127.0.0.1:${OTEL_HTTP_PORT}"
@@ -227,11 +224,9 @@ print_env() {
   printf '%sAPI_PORT=%s\n' "$prefix" "$API_PORT"
   printf '%sWORKER_HEALTH_PORT=%s\n' "$prefix" "$WORKER_HEALTH_PORT"
   printf '%sPOSTGRES_HOST_PORT=%s\n' "$prefix" "$POSTGRES_HOST_PORT"
-  printf '%sREDIS_HOST_PORT=%s\n' "$prefix" "$REDIS_HOST_PORT"
   printf '%sOTEL_HTTP_PORT=%s\n' "$prefix" "$OTEL_HTTP_PORT"
   printf '%sPOSTGRES_URL=%s\n' "$prefix" "$POSTGRES_URL"
   printf '%sDATABASE_URL=%s\n' "$prefix" "$DATABASE_URL"
-  printf '%sREDIS_URL=%s\n' "$prefix" "$REDIS_URL"
   printf '%sWEB_API_BASE_URL=%s\n' "$prefix" "$WEB_API_BASE_URL"
   printf '%sOTEL_EXPORTER_OTLP_ENDPOINT=%s\n' "$prefix" "$OTEL_EXPORTER_OTLP_ENDPOINT"
 }
@@ -239,8 +234,8 @@ print_env() {
 export_env() {
   calculate_ports
   export API_PORT WEB_PORT WORKER_HEALTH_PORT
-  export POSTGRES_HOST_PORT REDIS_HOST_PORT
-  export OTEL_HTTP_PORT POSTGRES_URL DATABASE_URL REDIS_URL
+  export POSTGRES_HOST_PORT
+  export OTEL_HTTP_PORT POSTGRES_URL DATABASE_URL
   export WEB_URL WEB_API_BASE_URL OTEL_EXPORTER_OTLP_ENDPOINT
 }
 
@@ -258,13 +253,10 @@ EOF
 
 refresh_derived_env_after_overrides() {
   if ! has_override POSTGRES_URL; then
-    POSTGRES_URL="postgresql://app:app@127.0.0.1:${POSTGRES_HOST_PORT}/app"
+    POSTGRES_URL="postgresql://dormouse:dormouse@127.0.0.1:${POSTGRES_HOST_PORT}/dormouse"
   fi
   if ! has_override DATABASE_URL; then
     DATABASE_URL="$POSTGRES_URL"
-  fi
-  if ! has_override REDIS_URL; then
-    REDIS_URL="redis://127.0.0.1:${REDIS_HOST_PORT}/0"
   fi
   if ! has_override WEB_URL; then
     WEB_URL="http://127.0.0.1:${WEB_PORT}"
@@ -275,7 +267,7 @@ refresh_derived_env_after_overrides() {
   if ! has_override OTEL_EXPORTER_OTLP_ENDPOINT; then
     OTEL_EXPORTER_OTLP_ENDPOINT="http://127.0.0.1:${OTEL_HTTP_PORT}"
   fi
-  export POSTGRES_URL DATABASE_URL REDIS_URL
+  export POSTGRES_URL DATABASE_URL
   export WEB_URL WEB_API_BASE_URL OTEL_EXPORTER_OTLP_ENDPOINT
 }
 

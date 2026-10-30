@@ -1,63 +1,70 @@
 # Deployment
 
-508 Devkit does not choose a deployment platform by default. Pick the smallest deployment shape that matches the product, team, and operational constraints.
+## Decision
 
-## Decision Record
+**One small VPS. One server process. Postgres alongside it. Media on
+Cloudflare R2 behind a custom domain.**
 
-When applying this devkit to a project, record the deployment decision here:
+Target: 100 concurrent users, roughly nine live rooms, **$15–25/month** all in.
 
-- Target platform:
-- Services deployed:
-- Database and storage:
-- Secrets management:
-- Preview environment strategy:
-- Rollback strategy:
-- Production health checks:
+Room state lives in the server process memory. Postgres holds only the durable
+things: accounts, blocks, bans, presets, and the catalogue manifest. There is
+no Redis, because at this size a second datastore buys nothing.
 
-## Common Options
+## Media
 
-| Option | Good Fit | Tradeoffs |
-| --- | --- | --- |
-| Fly.io | Small teams that want simple app hosting close to users. | Requires platform-specific config and operational familiarity. |
-| Render | Straightforward web services, workers, and managed databases. | Less control than lower-level infrastructure. |
-| Vercel or Cloudflare Pages | Frontend-first apps and edge-friendly web surfaces. | Backend, worker, and database workflows may need separate hosting. |
-| Kamal | Teams that want Docker deploys to owned servers. | Requires server operations, registry setup, and rollback discipline. |
-| Coolify | Self-hosted platform-style deploys. | Adds a platform to operate and upgrade. |
-| Kubernetes | Larger teams with existing cluster operations. | Too much machinery for most new projects. |
+R2 with a **custom domain** is the whole economics of this project. Egress is
+$0, which Cloudflare's service-specific terms (28 Sep 2026) explicitly permit
+when the origin is a Cloudflare paid service. 100 concurrent viewers at 480p
+streaming continuously for a month is 32.9 TB and costs nothing.
 
-## Mobile Store Publishing
+**`r2.dev` will not do.** It is development-only, rate-limited, and uncached,
+and Cloudflare's caching is a custom-domain-only feature. Without a real domain
+attached the zero-egress story does not materialise.
 
-Native mobile apps aren't a deployment-platform decision at all — there's no
-server to host. If the target project selects `stacks/android`, use its
-release pipeline instead of anything in this file: `version.txt` +
-release-please decide the version, a release-PR merge is what ships it, and
-CI publishes signed builds to GitHub Releases, Google Play (internal track),
-and F-Droid (a self-hosted repo plus an optional f-droid.org submission). See
-`stacks/android/README.md` for the full model, including why the two jobs
-live in one workflow run and how signing keys are handled.
+Storage is the only media cost: a 500-hour 480p catalogue is about 225 GB,
+roughly $3.40/month.
 
-The target repo's own `docs/deployment.md` should be rewritten to describe
-that concrete pipeline rather than keeping this file's generic
-platform-decision-record shape — see `stacks/android/README.md` → "Docs To
-Write In The Target Repo".
+## Scale path
 
-## Workflow Guidance
+Do not pre-build this. When the single process is genuinely the bottleneck:
 
-Keep deployment workflows platform-specific and explicit. A project should add deploy CI only after the platform is chosen and secrets are configured.
+1. Move room state to Redis.
+2. Run N server processes.
+3. Route by room id with sticky sessions.
 
-Before enabling automatic production deploys:
+Nothing in the current design blocks that, and doing it early would cost months
+for capacity we do not need.
 
-1. Add a health endpoint or smoke test.
-2. Document required environment variables.
-3. Confirm rollback behavior.
-4. Keep preview deploys separate from production deploys.
-5. Use least-privilege deployment credentials.
+## Android
 
-## Agent Notes
+Release tooling is salvaged from the 508 devkit and lives dormant in
+`tools/android-release/`. See its `README.md` for the full model — signing,
+versioning, and the F-Droid constraints.
 
-- Do not infer a deployment platform from this devkit. Inspect the target repo,
-  hosting account, and team preference first.
-- Keep deployment workflows out of new repos until secrets and rollback are
-  known.
-- If deployment is undecided, leave the decision record blank rather than
-  copying placeholder platform files.
+Order of distribution:
+
+1. **Web** — the primary platform.
+2. **Self-hosted F-Droid repo** plus a GitHub Releases APK.
+   `tools/android-release/scripts/fdroid-publish.sh` does this unchanged: it
+   takes an APK path, signs an index, and pushes to `gh-pages`.
+3. **Google Play.** Requires verified developer identity; the legal name is
+   published. We publish as 508.dev LLC.
+4. **f-droid.org inclusion**, last. They build from source on their own
+   infrastructure, which for a Capacitor app means the whole Node toolchain has
+   to build reproducibly there. Attempt only once the build is boring.
+
+Known gap: `tools/android-release/scripts/sync-version.sh` is written for a
+Kotlin/Gradle-KTS app. Capacitor generates Groovy `android/app/build.gradle`
+with `versionCode N` and no `=`, so the sed will miss. It needs rewriting
+before the first Android release, and `fdroid-publish.sh` depends on its
+`--print` output.
+
+## Before public launch
+
+- UK OSA illegal-content risk assessment, written and dated.
+- Children's access assessment.
+- DSA Article 13 legal representative in an EU member state.
+- Published security contact (already in `SECURITY.md`).
+
+These are tracked in `docs/backlog.md`.

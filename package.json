@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "bun@1.3.13",
+  "packageManager": "bun@1.4.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -14,7 +14,7 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && bun run --cwd apps/client check",
     "test": "vitest run",
     "check": "./scripts/check-all.sh",
     "ports": "./scripts/worktree-ports.sh env"

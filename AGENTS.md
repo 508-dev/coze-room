@@ -81,14 +81,20 @@ These are decided. Do not quietly reverse them — see `DECISIONS.md`.
 
 ## Asset work
 
-- Generate stills, then downsample to the pixel grid and quantize to the single
-  project palette. One shared palette is what makes generated art cohere.
+- The palette is **Atropoeia (48 colours)**, committed at
+  `tools/art/palette.hex`. Every asset quantizes to it and nothing else.
+- Generate stills, then nearest-neighbour downsample to the pixel grid and
+  quantize to the palette. No dithering. `tools/art/verify.py` fails CI on any
+  off-palette colour, so this is enforced rather than merely expected.
 - **Composite avatar layers at runtime, never pre-baked.** Pre-baking turns
   8×8×8 options into thousands of sprites per pose.
 - Prefer shaders over animation frames for motion — rain, fog, god rays,
   flicker, parallax are all procedural and cost no art.
-- Commercially usable models only: FLUX.1-schnell, SDXL + LoRAs, Qwen-Image.
+- Commercially usable models only: SDXL (OpenRAIL-M), FLUX.1-schnell
+  (Apache-2.0), Qwen-Image (Apache-2.0).
   **FLUX.1-dev is non-commercial — do not use it.**
+- **LoRAs carry their own licences and many Civitai ones are non-commercial.**
+  Check each, and record licence plus source URL in `tools/art/PROMPTS.md`.
 
 ## `.context/`
 

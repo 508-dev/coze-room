@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { NightTrace, Occupant, RoomSpec, ServerMessage } from "@dormouse/protocol";
+import type { GuestbookEntry, Occupant, RoomSpec, ServerMessage } from "@dormouse/protocol";
 import { onMount } from "svelte";
 import { Connection } from "./net/connection";
 import { Scene } from "./room/scene";
@@ -14,7 +14,7 @@ let connection: Connection | null = null;
 let selfId = $state<string | null>(null);
 let room = $state<RoomSpec | null>(null);
 let occupants = $state<Occupant[]>([]);
-let traces = $state<NightTrace[]>([]);
+let guestbook = $state<GuestbookEntry[]>([]);
 let drifting = $state(false);
 let connected = $state(false);
 
@@ -41,7 +41,7 @@ function apply(message: ServerMessage) {
       selfId = message.selfId;
       room = message.room;
       occupants = message.occupants;
-      traces = message.traces;
+      guestbook = message.guestbook;
       connected = true;
       scene?.drawRoom(message.room);
       break;
@@ -122,8 +122,8 @@ onMount(() => {
       {occupants.length} here{#if asleepCount > 0}, {asleepCount} asleep{/if}
     </p>
 
-    {#if traces.length > 0}
-      <p class="trace">{traces[0]?.sleepers} people slept here last night.</p>
+    {#if guestbook.length > 0}
+      <p class="guestbook">{guestbook[0]?.sleepers} people slept here last night.</p>
     {/if}
 
     {#if !connected}
@@ -169,7 +169,7 @@ onMount(() => {
   }
 
   .count,
-  .trace,
+  .guestbook,
   .status {
     margin: 0.25rem 0 0;
     color: var(--dim);

@@ -80,8 +80,8 @@ export type ServerMessage =
       room: RoomSpec;
       occupants: Occupant[];
       media: MediaState;
-      /** Sleeper-hours and headcount from previous nights, for the trace board. */
-      traces: NightTrace[];
+      /** Sleeper-hours and headcount from previous nights, shown on the guestbook. */
+      guestbook: GuestbookEntry[];
     }
   | { t: "joined"; occupant: Occupant }
   | { t: "left"; id: string }
@@ -91,7 +91,7 @@ export type ServerMessage =
   | { t: "full"; occupants: Occupant[] }
   | { t: "ping" };
 
-export interface NightTrace {
+export interface GuestbookEntry {
   /** ISO date of the night, keyed to local server midnight. */
   date: string;
   sleepers: number;

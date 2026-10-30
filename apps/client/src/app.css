@@ -1,0 +1,32 @@
+:root {
+  --bg: #0d0b14;
+  --ink: #cfc6e0;
+  --dim: #6b6380;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font:
+    14px / 1.5 system-ui,
+    sans-serif;
+  overscroll-behavior: none;
+}
+
+#app {
+  height: 100%;
+}
+
+/* The canvas owns the room; everything with text in it is Svelte on top. */
+canvas {
+  display: block;
+  touch-action: manipulation;
+}

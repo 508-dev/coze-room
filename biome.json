@@ -1,16 +1,17 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
   "root": true,
   "files": {
     "ignoreUnknown": true,
     "includes": [
       "**",
       "!**/.claude",
-      "!**/assets/**",
-      "!**/packs/**",
-      "!**/catalogue/media/**",
+      "!**/assets",
+      "!**/packs",
+      "!**/catalogue/media",
       "!**/*.glsl",
-      "!tools/android-release/**"
+      "!tools/android-release",
+      "!**/*.md"
     ]
   },
   "formatter": {
@@ -55,5 +56,27 @@
     "clientKind": "git",
     "useIgnoreFile": true,
     "defaultBranch": "main"
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svelte"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/server/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ]
 }

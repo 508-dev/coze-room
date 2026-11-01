@@ -29,6 +29,7 @@ save you from expecting finished avatars.
 |---|---|
 | `README.md` | this runbook |
 | [`PROMPTS.md`](PROMPTS.md) | models and their licences, sizes, prompt structure, seeds, settings |
+| [`EXPERIMENTS.md`](EXPERIMENTS.md) | what has been tried beyond the pipeline, and tools evaluated |
 | [`workflow.json`](workflow.json) | the ComfyUI generation graph |
 | [`models.sha256`](models.sha256) | checksums of the model files |
 | [`palette.hex`](palette.hex) | the Atropoeia palette, 48 colours: **the single source of truth** |
@@ -355,7 +356,9 @@ and forgiving, and a stray pixel reads as detail. Expect light cleanup.
   from separate, aligned layers (skin, hair, top, accessory). The generator
   makes a whole character in one piece, and it will not hold one character's
   proportions across poses or seeds. Use avatar generations as reference and
-  as a starting point for a base body; the layer sets are hand work.
+  as a starting point for a base body. A promising way around this for a
+  single pose, inpainting each part onto a fixed base, is written up in
+  [`EXPERIMENTS.md`](EXPERIMENTS.md).
 - **Only seated poses have been tried.** Test standing, lying and sleeping
   before planning around them.
 - **There is no transparency.** Removing the backdrop is the manual first

@@ -64,6 +64,9 @@ Useful scripts:
 Parallel worktrees get non-colliding ports automatically, hashed from the
 worktree path. See [`docs/development.md`](docs/development.md).
 
+Making art is a separate pipeline with its own runbook (it needs an NVIDIA
+GPU): [`tools/art/README.md`](tools/art/README.md).
+
 ## Licence
 
 Open core. The client is **GPL-3.0**, the server is **AGPL-3.0**, and the

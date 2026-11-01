@@ -11,6 +11,7 @@
       "!**/catalogue/media",
       "!**/*.glsl",
       "!tools/android-release",
+      "!tools/art/workflow.json",
       "!**/*.md"
     ]
   },

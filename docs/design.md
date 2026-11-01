@@ -271,20 +271,33 @@ need regenerating.
 
 **Pipeline:** generate stills → deterministic nearest-neighbour downsample to
 the pixel grid → quantize to the palette, no dithering → hand cleanup in
-Aseprite or LibreSprite. The deterministic middle two steps are what turn a
-diffusion model's high-resolution *picture of* pixel art into actual pixel art
-on a real grid.
+LibreSprite. The deterministic middle two steps are what turn a diffusion
+model's high-resolution *picture of* pixel art into actual pixel art on a real
+grid. LibreSprite rather than Aseprite (settled 2026-10-31) because it is free
+software in Manjaro's official repositories, while Aseprite is proprietary and
+AUR-only; both read and write the same indexed PNGs. The runbook is
+[`tools/art/README.md`](../tools/art/README.md).
 
 **Generation environment:** Manjaro Linux, RTX 5090 (32 GB). ComfyUI installed
 2026-10-30. SDXL is the intended checkpoint, chosen because the pixel-art LoRA
 ecosystem for SDXL is by far the richest; FLUX.1-schnell (Apache-2.0) is the
 fallback. A *LoRA* is a small add-on file that biases a base model toward one
-style without retraining it.
+style without retraining it. The LoRA is **PixelArtRedmond** (settled
+2026-10-31), because its Hugging Face and Civitai terms agree that generated
+images may be sold. The better-known Pixel Art XL was rejected because its two
+listings contradict each other on commercial use. Evidence for both is in
+[`tools/art/PROMPTS.md`](../tools/art/PROMPTS.md).
+
+PixelArtRedmond draws on a fixed 16-pixel block regardless of resolution,
+strength or prompt, so a sprite's true size is its generation size ÷ 16, and
+the downsample is a fixed `--cell 16`. Avatars generate at 768×768 into a 48×48
+canvas; nothing smaller survives SDXL.
 
 **Model and LoRA licences matter as much as output**, because the commercial
 surface is art packs:
 
-- SDXL base (OpenRAIL-M) and FLUX.1-schnell (Apache-2.0) permit commercial use.
+- SDXL base (CreativeML Open RAIL++-M) and FLUX.1-schnell (Apache-2.0) permit
+  commercial use.
 - **FLUX.1-dev is non-commercial. Do not use it.**
 - **LoRAs carry their own individual licences and many Civitai LoRAs are
   non-commercial or no-derivatives.** Check each one, record the licence and
@@ -297,7 +310,10 @@ policing it by eye.
 
 **Expect the avatars to need hand cleanup.** Diffusion models do not make
 deliberate decisions at 28px, and at that size every pixel is one. The room and
-window views survive the pipeline far better than characters do.
+window views survive the pipeline far better than characters do. The generator
+also makes whole characters, not the separate, aligned layers that runtime
+compositing needs, so avatar layer sets are hand work that uses generations as
+reference.
 
 **Shaders carry the motion.** Rain, water, fire flicker, god rays, fog, cloth
 sway, CRT glow, parallax, candle gutter — all procedural, zero frames, and

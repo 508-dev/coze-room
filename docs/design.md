@@ -324,6 +324,69 @@ should be shader-driven regardless of who makes the art.
 id. Swapping generated art for commissioned human art is a data change, not a
 code change. This is the same mechanism the commercial content packs will use.
 
+### Proposed, not agreed: per-seat occupants and procedural motion
+
+> Proposed 2026-11-01, from what the art pipeline turned out to be able to do
+> ([`tools/art/EXPERIMENTS.md`](../tools/art/EXPERIMENTS.md)). Nothing above
+> changes until this is agreed. If it is, edit the sections it names and
+> delete this one.
+
+**The problem.** Runtime layer compositing needs a separate layer per option,
+each lining up with all the others and staying consistent across four poses at
+2–4 frames each. A diffusion model makes none of that by default. Inpainting
+each part onto a fixed base gets aligned layers for one pose. Nobody has shown
+that a garment survives a change of pose, and drawn animation frames are
+exactly what generation cannot keep consistent.
+
+**The proposal, for v0.1:**
+
+- **Occupants are drawn into their seat.** Generate the room empty, then
+  inpaint a character into each seat of the empty room and keep only the
+  pixels that changed. Scale, perspective and lighting come from the room,
+  and an armrest in front of the sitter stays part of the room. Generating the
+  room with people already in it does not work: seats fill and empty all
+  night, and an empty seat must look empty.
+- **A small catalogue of looks.** Each look is a fixed description ("red
+  ponytail, rust hoodie") generated into every seat, so someone who changes
+  seats stays recognisably themselves, if not pixel-identical. Seat movement
+  stays free. Locking each person to one seat was considered; it is not
+  needed.
+- **The seat decides the pose.** Couch means sitting, hammock means lying.
+  Each seat has an awake and an asleep sprite per look. The asleep one is made
+  by inpainting only the head of the awake one, so the body and clothes cannot
+  drift. Standing is dropped: changing seat is a hop or a fade.
+- **No drawn frames: all motion is procedural.**
+  - *Avatars:* a 1-pixel breathing bob of everything above a per-sprite
+    breath line; a blink made by briefly swapping in the asleep sprite's eyes;
+    when asleep, slower breathing and a drifting `z`.
+  - *Environment:* the shaders above, plus **palette cycling**: rotating
+    colours along a ramp inside a masked region animates fire, candle glow,
+    water, TV static and blinking lights with no frames. It suits assets that
+    are all indexed against one fixed palette.
+  - Each seat gets a small foreground mask, drawn once and rendered after the
+    occupants, so a breathing sitter never slides over the armrest.
+- **Asset count is looks × seats × 2.** Six looks across four seats is 48
+  sprites: minutes of GPU time, plus cleanup.
+
+**What it would change.**
+
+- **Layer compositing becomes per-seat sprites for v0.1.** The argument
+  against pre-baking was combinatorial (4,096 sprites per pose). It still
+  holds for layered customisation, which moves with
+  [#38](https://github.com/508-dev/coze-room/issues/38) to after v0.1, but it
+  does not apply to a catalogue of a few dozen sprites.
+- **The poses.** The *Scope* line's four poses at 2–4 frames each become
+  seat-determined poses, awake and asleep, with procedural motion.
+- **The rest:** [#54](https://github.com/508-dev/coze-room/issues/54)'s scope,
+  and the "composite avatar layers at runtime" line in `AGENTS.md`.
+
+**Not yet shown to work:**
+
+- inpainting a character into a seat of a generated room (so far only parts
+  on a lone mannequin have been tried);
+- whether head-only inpainting gives a convincing asleep sprite;
+- how recognisable one look stays across seats.
+
 ## Distribution
 
 Web → self-hosted F-Droid repo + GitHub Releases APK → Google Play →

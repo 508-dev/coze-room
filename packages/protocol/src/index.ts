@@ -2,6 +2,11 @@
 export type { GuestbookEntry, GuestbookWelcome } from "./guestbook";
 export type { MediaState, MediaWelcome } from "./media";
 export type { WelcomeFields, WelcomeMessage } from "./presence";
+export {
+  normalizePrivateCode,
+  type PrivateRoomCreated,
+  type PublicRoomSummary,
+} from "./private-rooms";
 export type { AvatarLook, Occupant, Pose, RoomSpec, Seat } from "./types";
 
 export const PROTOCOL_VERSION = 1;

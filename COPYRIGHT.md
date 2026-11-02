@@ -18,6 +18,10 @@ browser.
 
 ## Third-party content
 
+The private-room code word list in `apps/server/src/private-codes.ts` is original
+project content, not copied from an external word list, and has no third-party
+licence or attribution requirements.
+
 Ambient audio is sourced from Freesound under **CC0** and **CC BY 4.0** only.
 NonCommercial-licensed audio is never used, because it would be incompatible
 with the paid content packs. Attribution for CC BY material is in

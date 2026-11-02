@@ -22,9 +22,11 @@ class FakeSocket extends EventTarget {
     this.dispatchEvent(new MessageEvent("message", { data: JSON.stringify(message) }));
   }
 
-  close() {
+  close(code = 1000) {
     this.readyState = 3;
-    this.dispatchEvent(new Event("close"));
+    const event = new Event("close");
+    Object.defineProperty(event, "code", { value: code });
+    this.dispatchEvent(event);
   }
 }
 
@@ -35,10 +37,13 @@ function socket(): FakeSocket {
 }
 
 function connect() {
-  const connection = new Connection("the-back-room", {
-    name: "guest",
-    look: { tone: 0, head: 0, top: 0, accessory: 0 },
-  });
+  const connection = new Connection(
+    { roomId: "the-back-room" },
+    {
+      name: "guest",
+      look: { tone: 0, head: 0, top: 0, accessory: 0 },
+    },
+  );
   connection.connect();
   return connection;
 }
@@ -63,6 +68,43 @@ describe("Connection feature handlers", () => {
       name: "guest",
       look: { tone: 0, head: 0, top: 0, accessory: 0 },
     });
+    connection.dispose();
+  });
+
+  it("joins private rooms by code instead of exposing a room id", () => {
+    const connection = new Connection(
+      { code: "amber-apple-arch" },
+      { name: "guest", look: { tone: 0, head: 0, top: 0, accessory: 0 } },
+    );
+    connection.connect();
+
+    expect(socket().url.searchParams.get("code")).toBe("amber-apple-arch");
+    expect(socket().url.searchParams.has("room")).toBe(false);
+    connection.dispose();
+  });
+
+  it("stops reconnecting and reports a deliberately closed private room", () => {
+    const onRoomClosed = vi.fn();
+    const connection = new Connection(
+      { code: "amber-apple-arch" },
+      { name: "guest", look: { tone: 0, head: 0, top: 0, accessory: 0 } },
+      onRoomClosed,
+    );
+    connection.connect();
+    socket().close(4004);
+    vi.advanceTimersByTime(30_000);
+
+    expect(onRoomClosed).toHaveBeenCalledOnce();
+    expect(FakeSocket.instances).toHaveLength(1);
+    connection.dispose();
+  });
+
+  it("stops reconnecting after a full-room snapshot", () => {
+    const connection = connect();
+    socket().close(1013);
+    vi.advanceTimersByTime(30_000);
+
+    expect(FakeSocket.instances).toHaveLength(1);
     connection.dispose();
   });
 

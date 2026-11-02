@@ -45,6 +45,20 @@ After an art revision, run `bun run art:manifest` (Python 3 standard library onl
 Vitest invokes its Python unit tests and checks that the committed manifest is
 byte-identical to regenerated output. See `frontend.md` for the feature sections.
 
+Private rooms are created with `POST /rooms/private`, which returns `{ roomId,
+code }`, and joined with `/ws?code=word-word-word`. Codes are case-insensitive
+and accept spaces in place of hyphens. They never appear in `/rooms` or health
+counts. Share links and deep links use `#code=word-word-word` so the code stays
+out of ordinary HTTP request logs, and the client removes the fragment after a
+successful join. The WebSocket handshake still requires `/ws?code=…`; that query
+string can remain in application or proxy access logs, so redact it where possible.
+
+Creation and code-join attempts have separate per-IP fixed-window limits. Repeat
+attempts for the same valid code do not consume the reconnect budget. With
+`TRUST_PROXY=1`, the limiter trusts only the right-most X-Forwarded-For hop from
+the single Coolify/Traefik proxy. Enable it only when the app port is reachable
+through that proxy and never directly by clients.
+
 ## How to add a server/protocol feature
 
 Keep transport and room lifetime independent of feature logic:

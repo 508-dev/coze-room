@@ -6,6 +6,7 @@ export const registerPresence: ClientFeature = (state, connection) => {
       state.selfId = message.selfId;
       state.room = message.room;
       state.occupants = message.occupants;
+      state.roomFull = false;
       state.connected = true;
     }),
     connection.on("joined", ({ occupant }) => {
@@ -20,6 +21,7 @@ export const registerPresence: ClientFeature = (state, connection) => {
     connection.on("full", ({ occupants }) => {
       // Deliberately show who is in there rather than an error screen.
       state.occupants = occupants;
+      state.roomFull = true;
       state.connected = false;
     }),
   ];

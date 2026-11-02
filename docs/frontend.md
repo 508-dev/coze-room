@@ -58,7 +58,7 @@ When starting Vite directly, export `VITE_API_BASE_URL` explicitly (see
    Do not destroy shared Pixi textures. See the seats and avatars layers.
 3. **DOM:** add a Svelte component to `src/components/feature-panels.ts` for room
    chrome. It receives `{ state: RoomState }`. `App.svelte` need not change.
-   `StartScreen.svelte` is the auto-join placeholder for room selection/attract mode.
+   `StartScreen.svelte` owns public/private room selection and the attract-mode entry.
    Its `AttractBackdrop` runs a real `Scene` from a deterministic local script, with no
    WebSocket or occupant identity/count UI. In development, `/?attract` renders the same
    rig unblurred for screenshots and visual regression checks. The backdrop renders at

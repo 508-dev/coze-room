@@ -9,6 +9,7 @@
     "packages/*"
   ],
   "scripts": {
+    "art:manifest": "python3 tools/art/build_manifest.py",
     "dev": "./scripts/dev.sh",
     "build": "bun run --cwd apps/client build",
     "lint": "biome check .",

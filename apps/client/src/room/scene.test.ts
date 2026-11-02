@@ -44,8 +44,10 @@ vi.mock("pixi.js", async (importOriginal) => {
   };
 });
 
-const room = PUBLIC_ROOMS[0];
-if (!room) throw new Error("no public room");
+const publicRoom = PUBLIC_ROOMS[0];
+if (!publicRoom) throw new Error("no public room");
+// Orchestration tests explicitly use a room without a selected pack.
+const { packId: _packId, ...room } = publicRoom;
 
 async function init() {
   const scene = new Scene();

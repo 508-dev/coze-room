@@ -54,9 +54,11 @@ describe("placeholder scene layers", () => {
     layer.onOccupantsChange?.([occupant], "a");
     layer.onRoomChange?.(room, null);
     const bodies = container.children[0] as Container;
-    expect(bodies.children[0]?.position).toMatchObject({ x: 524, y: 238 });
+    const hammock = room.seats.find((seat) => seat.id === "hammock");
+    if (!hammock) throw new Error("missing hammock");
+    expect(bodies.children[0]?.position).toMatchObject({ x: hammock.x + 44, y: hammock.y - 12 });
     layer.onRoomChange?.({ ...room, seats: room.seats.map((s) => ({ ...s, x: s.x + 10 })) }, null);
-    expect(bodies.children[0]?.position).toMatchObject({ x: 534, y: 238 });
+    expect(bodies.children[0]?.position).toMatchObject({ x: hammock.x + 54, y: hammock.y - 12 });
     layer.onOccupantsChange?.([], "a");
     expect(bodies.children).toHaveLength(0);
     layer.destroy();

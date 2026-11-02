@@ -1,5 +1,6 @@
 import type { RoomSpec, Seat } from "@dormouse/protocol";
-import { Container, Graphics } from "pixi.js";
+import { Container, Graphics, Rectangle } from "pixi.js";
+import { occupantsSection } from "../art/occupants";
 import type { LayerContext, SceneLayer } from "./layer";
 import { seatGeometry } from "./seat-geometry";
 
@@ -18,9 +19,22 @@ export function createSeatsLayer(): SceneLayer {
       context = value;
       context.container.addChild(seats);
     },
-    onRoomChange(room: RoomSpec) {
+    onRoomChange(room: RoomSpec, pack) {
       for (const child of seats.removeChildren()) child.destroy();
+      const art =
+        pack && occupantsSection(pack.manifest.sections?.occupants, pack.manifest.room.size);
       for (const seat of room.seats) {
+        if (art?.seats[seat.id]) {
+          const target = new Container();
+          // Centred on the furniture anchor (not its top-left), invisible but still hittable.
+          target.position.set(seat.x, seat.y);
+          target.hitArea = new Rectangle(-12, -15, 24, 18);
+          target.eventMode = "static";
+          target.cursor = "pointer";
+          target.on("pointertap", () => context.events.emit("seatClick", { seatId: seat.id }));
+          seats.addChild(target);
+          continue;
+        }
         const { width, height } = seatGeometry(seat);
         const graphic = new Graphics()
           .roundRect(0, 0, width, height, 6)

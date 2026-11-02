@@ -1,4 +1,5 @@
 import type { RoomSpec } from "@dormouse/protocol";
+import art from "../../../packs/dormouse-v0/art.json";
 
 /**
  * Public rooms are a small fixed set of named places, not user-created lobbies.
@@ -12,11 +13,13 @@ export const PUBLIC_ROOMS: RoomSpec[] = [
     id: "the-back-room",
     name: "The Back Room",
     capacity: 12,
-    seats: [
-      { id: "couch-l", kind: "couch", pose: "sit", x: 180, y: 300, depth: 2 },
-      { id: "couch-r", kind: "couch", pose: "sit", x: 250, y: 300, depth: 2 },
-      { id: "beanbag", kind: "beanbag", pose: "sit", x: 380, y: 340, depth: 3 },
-      { id: "hammock", kind: "hammock", pose: "lie", x: 480, y: 250, depth: 1 },
-    ],
+    packId: "dormouse-v0",
+    seats: Object.entries(art.seats).map(([id, { anchor }]) => ({
+      id,
+      kind: id.startsWith("couch") ? "couch" : id === "beanbag" ? "beanbag" : "hammock",
+      pose: id === "hammock" ? "lie" : "sit",
+      ...anchor,
+      depth: anchor.y,
+    })),
   },
 ];

@@ -73,7 +73,7 @@ Slots render in this fixed order: `background`, `windowView`, `furnitureBack`,
 room painting with transparent window cut-outs, **not** `background`: views
 must be behind those cut-outs. Foreground armrests/occluders use `furnitureFront`.
 Within a slot, layers are attached in registry order; own containers can sort
-children by depth. No shaders or environmental effects are implemented yet.
+children by depth. The environment and occupant art layers use these same hooks.
 
 ## Room space and packs
 
@@ -84,8 +84,8 @@ largest **integer** scale that fits when at least 1x fits. Smaller viewports use
 a fractional fit so portrait phones keep the whole room visible, without cropping.
 Rendering uses device resolution capped at 2x with auto-density; pointer events
 remain in CSS pixels and textures remain nearest-sampled.
-Seat coordinates and placeholder shapes are unchanged, including the beanbag
-extending below y=360 and the standing marker at y=380; there is no room-edge mask.
+The public room uses `dormouse-v0` at 128×72; server seat anchors come directly
+from its `art.json`. Rooms without a pack retain the original placeholder shapes.
 
 Manifest v1 (`src/room/packs/manifest.ts`):
 
@@ -107,8 +107,8 @@ Sizes are positive integer pixels. Views and sections are optional. File paths
 must be pack-relative, without `..`, absolute URLs, query strings or escapes.
 The loader validates the core manifest and loads its textures via Pixi `Assets`,
 with nearest-neighbour sampling. Missing/invalid manifests or required textures
-warn and retain placeholder rendering, never clear the screen. Views are loaded
-but selecting/rendering an environment belongs to its future layer.
+warn and retain placeholder rendering, never clear the screen. The environment
+layer renders the first view until `environmentChanged: { id }` is received.
 
 **Adding a manifest section:** declare its type in the owning feature's module:
 
@@ -130,6 +130,43 @@ in `apps/client/dist/packs/`, except the root `packs/README.md`. Everything ther
 is public. PNG/OGG are Git LFS;
 keep provenance and commercial-use licence evidence for real assets. The
 `test-fixture` pack is only an original two-colour technical swatch.
+
+## v0.1 art integration
+
+`bun run art:manifest` regenerates `packs/dormouse-v0/manifest.json` from the
+artist-owned `art.json`. Tests fail if it is stale. Run it after asset revisions;
+do not hand-edit the manifest. Sections (all coordinates are integer room pixels):
+
+- `occupants`: `looks` (sorted stable catalogue ids), `seats[seatId]` with
+  `anchor: [x,y]` and `pose`, and `sprites[file]` with `seat`, `look`, `state`,
+  `breathRow` and `headBox: [x,y,w,h]`.
+- `tv: { screen: [x,y,w,h] }`.
+- `guestbook: { spot: [x,y] }`: **centre** of the art rectangle, rounded down.
+- `audio: { beds: { [environmentId]: { ogg, m4a } } }`: pack-relative files.
+- `environment: { glass: [[x,y,w,h], ...] }`: exact glass, excluding mullions.
+
+The cut-out room is `furnitureBack`; views/weather are `windowView`. Invisible
+centred hit areas replace placeholder furniture. Occupants load asynchronously
+with stale-room guards; failed assets retain placeholders. FNV-1a of occupant id
+selects a look, preserving identity on seat changes. Protocol `AvatarLook` fields
+are intentionally unused until #38. Unseated guests remain counted in presence,
+with no canvas body: v0.1 has no standing art and should not pile guests outside
+the room or manufacture a sitter in an occupied chair.
+
+Breathing moves only rows **above** `breathRow` down one pixel (2s awake, 4s
+asleep, id-derived phase). The lower body and furniture-contact edge never move;
+breath splits sit above foreground armrests, so this pack needs no extra
+`furnitureFront` mask. A replacement pack whose armrest crosses a moving upper
+body must provide an occluder in that slot before release. Sleep uses the asleep
+sprite plus a tiny opaque pixel `z`, not a font texture. Blink is deferred.
+
+Weather uses integer opaque palette cells clipped to glass rectangles. Lighting
+cycles only existing yellow/teal highlight cells along Atropoeia ramps; there is
+no alpha blend, blur or off-palette shader output. For this 128×72 pack, tiny
+batched Graphics updates (weather ≤10Hz, lighting ~1.4Hz) avoid the offscreen
+render pass a full-canvas filter would need. All animation uses Scene's ticker,
+therefore ≤5Hz in drift-off, with no independent animation timers. Live
+`prefers-reduced-motion` disables breathing/weather/flicker and fixes the `z`.
 
 ## Performance posture
 

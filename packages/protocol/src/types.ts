@@ -29,7 +29,9 @@ export interface Occupant {
   look: AvatarLook;
 }
 
-/** Palette indices into the avatar layer sets. */
+/** Palette indices into the avatar layer sets.
+ * TODO(#38): v0.1 per-seat sprites use an id-derived catalogue look; restore layered customisation later.
+ */
 export interface AvatarLook {
   tone: number;
   head: number;

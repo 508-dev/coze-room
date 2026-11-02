@@ -86,8 +86,8 @@ These are decided. Do not quietly reverse them — see `DECISIONS.md`.
 - Generate stills, then nearest-neighbour downsample to the pixel grid and
   quantize to the palette. No dithering. `tools/art/verify.py` fails CI on any
   off-palette colour, so this is enforced rather than merely expected.
-- **Composite avatar layers at runtime, never pre-baked.** Pre-baking turns
-  8×8×8 options into thousands of sprites per pose.
+- **v0.1 uses per-seat occupant sprites, awake/asleep, with procedural motion.**
+  Layered customisation is deferred to #38; never pre-bake its 8×8×8 combinations.
 - Prefer shaders over animation frames for motion — rain, fog, god rays,
   flicker, parallax are all procedural and cost no art.
 - Commercially usable models only: SDXL (OpenRAIL-M), FLUX.1-schnell

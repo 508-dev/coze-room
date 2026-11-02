@@ -200,6 +200,46 @@ render pass a full-canvas filter would need. All animation uses Scene's ticker,
 therefore ≤5Hz in drift-off, with no independent animation timers. Live
 `prefers-reduced-motion` disables breathing/weather/flicker and fixes the `z`.
 
+## Ambient audio integration
+
+`state.features.audio.environment` is the shared `rain | clear-night` id. The
+feature also declaration-merges `SceneEvents.environmentChanged: { id }` and
+emits it on welcome and every accepted room change. Window-view layers should
+subscribe to this event, then emit `environmentRequested: Record<string, never>`
+on attach; the audio feature replies with the current id so a layer that attaches
+after welcome cannot miss it. Local previews do **not** emit either event: they
+change only what the previewing visitor hears.
+
+A pack may override bed locations with this feature-owned section:
+
+```json
+{
+  "sections": {
+    "audio": {
+      "beds": {
+        "rain": { "ogg": "audio/rain.ogg", "m4a": "audio/rain.m4a" },
+        "clear-night": { "ogg": "audio/clear-night.ogg", "m4a": "audio/clear-night.m4a" }
+      }
+    }
+  }
+}
+```
+
+The audio feature validates all paths before use and otherwise falls back to
+`${VITE_PACK_BASE_URL}/dormouse-v0/audio/<environment>.{ogg,m4a}`. Playback uses
+looping Web Audio buffer sources and a crossfade, never an `<audio loop>` element.
+Downloads use persistent Cache Storage; no playback timestamps are shared.
+
+The TV feature uses the same local mix through
+`await state.features.audio.sourceInput("tv")`. Create its source nodes in
+`state.features.audio.context` after that promise resolves, then connect them to
+the returned gain. `connectMediaElement("tv", element)` is a convenience hook
+which does both for media-element playback. `setVolume("ambient" | "tv", 0…1)`
+sets the persisted per-source volume; `volumes` exposes the reactive values.
+The independent sleep timer ramps the combined output down over its final
+minute and holds it silent until an explicit preview/timer action; it does not
+interact with renderer drift-off mode.
+
 ## Performance posture
 
 The room is static most of the time. Budget the GPU for the first ten minutes

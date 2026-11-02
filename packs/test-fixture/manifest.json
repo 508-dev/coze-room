@@ -1,0 +1,8 @@
+{
+  "id": "test-fixture",
+  "version": 1,
+  "room": {
+    "size": [640, 360],
+    "background": "background.svg"
+  }
+}

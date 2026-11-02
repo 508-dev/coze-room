@@ -1,13 +1,16 @@
 import type {
   AvatarLook,
-  GuestbookEntry,
-  MediaState,
+  ClientMessage,
   Occupant,
   RoomSpec,
   ServerMessage,
+  WelcomeMessage,
 } from "@dormouse/protocol";
-import { encode } from "@dormouse/protocol";
+import { encode, PROTOCOL_VERSION } from "@dormouse/protocol";
 import type { ServerWebSocket } from "bun";
+import { isValidCoreClientMessage } from "./client-message";
+import type { RoomFeature, RoomFeatureFactory } from "./features/feature";
+import { roomFeatures } from "./features/registry";
 
 /** No input for this long and the avatar visibly falls asleep. Cosmetic only. */
 const DOZE_AFTER_MS = 10 * 60 * 1000;
@@ -37,11 +40,11 @@ interface Member {
 export class Room {
   readonly spec: RoomSpec;
   private members = new Map<string, Member>();
-  private media: MediaState = { itemId: null, startedAt: 0 };
-  private guestbook: GuestbookEntry[] = [];
+  private features: RoomFeature[];
 
-  constructor(spec: RoomSpec) {
+  constructor(spec: RoomSpec, factories: readonly RoomFeatureFactory[] = roomFeatures) {
     this.spec = spec;
+    this.features = factories.map((create) => create());
   }
 
   get occupants(): Occupant[] {
@@ -55,19 +58,43 @@ export class Room {
   join(id: string, name: string, look: AvatarLook, socket: Socket): Occupant {
     const occupant: Occupant = { id, name, seatId: null, asleep: false, look };
     this.members.set(id, { occupant, socket, lastInput: Date.now(), evictAt: null });
+    for (const feature of this.features) feature.onJoin?.(this, occupant);
     this.broadcast({ t: "joined", occupant }, id);
-    socket.send(
-      encode({
-        t: "welcome",
-        protocol: 1,
-        selfId: id,
-        room: this.spec,
-        occupants: this.occupants,
-        media: this.media,
-        guestbook: this.guestbook,
-      } satisfies ServerMessage),
-    );
+    const welcome: WelcomeMessage = {
+      t: "welcome",
+      protocol: PROTOCOL_VERSION,
+      selfId: id,
+      room: this.spec,
+      occupants: this.occupants,
+      // Wire-compatible defaults until the corresponding features contribute snapshots.
+      media: { itemId: null, startedAt: 0 },
+      guestbook: [],
+    };
+    for (const feature of this.features) Object.assign(welcome, feature.welcome?.(this, id));
+    socket.send(encode(welcome));
     return occupant;
+  }
+
+  /** Transport only decodes; room features own the joined-client message routes. */
+  handleMessage(id: string, message: ClientMessage, socket: Socket): void {
+    if (!isValidCoreClientMessage(message)) return;
+    try {
+      if (message.t === "join") {
+        this.join(id, message.name.slice(0, 24), message.look, socket);
+        return;
+      }
+      if (!this.members.has(id)) return;
+      for (const feature of this.features) {
+        if (feature.onMessage?.(this, id, message)) return;
+      }
+    } catch (error) {
+      // Abort this message, not the socket handler; never log the untrusted payload.
+      console.error(
+        "room message handler failed",
+        { roomId: this.spec.id, type: message.t },
+        error,
+      );
+    }
   }
 
   /**
@@ -131,6 +158,7 @@ export class Room {
       if (member.evictAt !== null && now >= member.evictAt) {
         this.members.delete(id);
         this.broadcast({ t: "left", id });
+        for (const feature of this.features) feature.onLeave?.(this, member.occupant);
         continue;
       }
       if (!member.occupant.asleep && now - member.lastInput >= DOZE_AFTER_MS) {
@@ -138,6 +166,7 @@ export class Room {
         this.broadcast({ t: "dozed", id, asleep: true });
       }
     }
+    for (const feature of this.features) feature.onTick?.(this, now);
   }
 
   broadcast(message: ServerMessage, exceptId?: string): void {
@@ -146,6 +175,11 @@ export class Room {
       if (id === exceptId || member.socket === null) continue;
       member.socket.send(payload);
     }
+  }
+
+  /** Feature responses addressed to one connected occupant. */
+  send(id: string, message: ServerMessage): void {
+    this.members.get(id)?.socket?.send(encode(message));
   }
 }
 

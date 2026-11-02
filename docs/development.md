@@ -15,6 +15,73 @@ Local development follows the pattern used across existing projects:
 ./scripts/check-all.sh
 ```
 
+### Client/server smoke test without infrastructure
+
+Neither the current room skeleton nor its tests need Postgres. In two terminals
+at the repo root (use the same port exports in each):
+
+```sh
+eval "$(./scripts/worktree-ports.sh export)"
+bun run --cwd apps/server dev
+```
+
+```sh
+eval "$(./scripts/worktree-ports.sh export)"
+VITE_API_BASE_URL="http://127.0.0.1:$API_PORT" bun run --cwd apps/client dev
+```
+
+Open `WEB_URL` from `./scripts/worktree-ports.sh env`. Verify the room name and
+occupant count appear, then click a seat: a brighter circle moves above it.
+Repeat after resizing so a 2x room is centred/letterboxed, then at 360×640 with
+device pixel ratio 2 or 3: the whole room fits fractionally, without cropping,
+and seats stay clickable in CSS coordinates (renderer resolution caps at 2x).
+The network panel should show the same JSON `join`, `welcome`, `takeSeat`, `moved` messages.
+`/packs/test-fixture/manifest.json` should load; builds must contain the same
+fixture under `apps/client/dist/packs/`. To test selection, set a room's optional
+`packId` to `test-fixture` locally; a nonexistent id should warn and keep seats.
+
+## How to add a server/protocol feature
+
+Keep transport and room lifetime independent of feature logic:
+
+1. **Protocol:** define `<Feature>ClientMessage` / `<Feature>ServerMessage` unions
+   in `packages/protocol/src/<feature>.ts`. Add one `| import("./<feature>").…`
+   line to each relevant union in `src/index.ts`. Keep unique `t` tags and add
+   public type re-exports as needed. Snapshot fields go in a `<Feature>Welcome`
+   interface, extended by `WelcomeFields` in `presence.ts`; wire fields stay
+   top-level and protocol version 1 is unchanged by this refactor.
+2. **Server:** create `apps/server/src/features/<feature>.ts` exporting a factory
+   returning `RoomFeature`. Add its factory to `features/registry.ts`. A factory
+   runs **once per Room**, so feature state must be inside it, not module globals.
+   No edits to `index.ts` are needed. That file only decodes and calls
+   `room.handleMessage(id, message, socket)`.
+3. `onMessage(room, id, message)` returns `true` only for owned messages (stopping
+   dispatch); return `undefined` for everything else. Non-join messages dispatch
+   only for known occupants. The core validates join names, look indices (0–7)
+   and seat IDs before dispatch; features must validate their own payloads.
+   Message-handler exceptions are caught/logged and abort only that message.
+   `room.occupants`/`room.spec` expose room state;
+   `room.broadcast(message)` and `room.send(id, message)` deliver typed responses.
+   Do not keep a socket reference in the feature.
+4. `onJoin` runs after membership insertion, before the core `joined` broadcast
+   and before welcome is collected.
+   `welcome(room, selfId)` contributes `Partial<WelcomeFields>`; keep to your own
+   fields. The core retains empty media/guestbook defaults for wire compatibility.
+   `onLeave` runs **after actual eviction**, not at transient disconnect (the
+   two-minute seat grace still applies). `onTick(room, now)` runs after core
+   dozing/eviction; `now` is server wall-clock milliseconds. Hooks are synchronous;
+   do asynchronous I/O inside a feature with explicit error handling, never
+   assume the room waits for it. Persistence is not implemented by this refactor.
+5. Room discovery/lifetime goes in `room-registry.ts`, public specifications in
+   `rooms.ts`. This is the private-room extension point, separate from HTTP/WS.
+6. Add tests alongside the feature, injecting factory lists into `new Room(spec,
+   factories)` when useful. See `features/feature.test.ts` for dispatch, lifecycle,
+   welcome and state-isolation examples. Run `./scripts/check-all.sh` and the
+   smoke test above before opening a PR.
+
+For client handlers, feature-owned runes, layers, UI registration and pack
+manifest sections, see the concrete checklist in [`frontend.md`](frontend.md).
+
 `worktree-ports.sh env` is the print-only URL/port mode. It prints `WEB_URL`
 first, then `WEB_PORT`, then the remaining assigned ports and derived
 connection strings, and exits without starting services. Keep that order when

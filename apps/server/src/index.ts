@@ -1,15 +1,15 @@
 import { type ClientMessage, decode } from "@dormouse/protocol";
-import { Room, type RoomSocket } from "./room";
-import { findRoom, PUBLIC_ROOMS } from "./rooms";
+import type { RoomSocket } from "./room";
+import { RoomRegistry } from "./room-registry";
 
 const PORT = Number(process.env.API_PORT ?? 8820);
 const TICK_MS = 15_000;
 
 /** Every public room exists from boot. There is no room creation yet. */
-const rooms = new Map<string, Room>(PUBLIC_ROOMS.map((spec) => [spec.id, new Room(spec)]));
+const rooms = new RoomRegistry();
 
 setInterval(() => {
-  for (const room of rooms.values()) room.tick();
+  rooms.tick();
 }, TICK_MS);
 
 const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
@@ -25,20 +25,12 @@ const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
     // A minimal public listing. Occupancy is shown so that choosing a room is
     // part of winding down rather than a loading screen.
     if (url.pathname === "/rooms") {
-      return Response.json(
-        [...rooms.values()].map((room) => ({
-          id: room.spec.id,
-          name: room.spec.name,
-          occupants: room.occupants.length,
-          capacity: room.spec.capacity,
-          asleep: room.occupants.filter((o) => o.asleep).length,
-        })),
-      );
+      return Response.json(rooms.list());
     }
 
     if (url.pathname === "/ws") {
-      const roomId = url.searchParams.get("room") ?? PUBLIC_ROOMS[0]?.id;
-      if (!roomId || !findRoom(roomId)) return new Response("no such room", { status: 404 });
+      const roomId = url.searchParams.get("room") ?? rooms.defaultRoomId;
+      if (!roomId || !rooms.get(roomId)) return new Response("no such room", { status: 404 });
 
       const upgraded = srv.upgrade(request, {
         data: { occupantId: crypto.randomUUID(), roomId },
@@ -69,22 +61,7 @@ const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
       const msg = decode<ClientMessage>(typeof raw === "string" ? raw : raw.toString());
       if (!msg) return;
 
-      switch (msg.t) {
-        case "join":
-          room.join(ws.data.occupantId, msg.name.slice(0, 24), msg.look, ws);
-          break;
-        case "takeSeat":
-          room.takeSeat(ws.data.occupantId, msg.seatId);
-          break;
-        case "stand":
-          room.stand(ws.data.occupantId);
-          break;
-        case "awake":
-          room.touchById(ws.data.occupantId);
-          break;
-        case "pong":
-          break;
-      }
+      room.handleMessage(ws.data.occupantId, msg, ws);
     },
 
     close(ws: RoomSocket) {

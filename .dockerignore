@@ -4,6 +4,12 @@
 .cursor
 .claude
 
+catalogue/media/
+tools/
+docs/
+scripts/
+extras/
+
 .env
 .env.*
 !.env.example
@@ -24,7 +30,7 @@ htmlcov
 
 dist
 build
-apps/web/dist
+apps/client/dist
 
 .DS_Store
 *.log

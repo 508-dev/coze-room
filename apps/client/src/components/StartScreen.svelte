@@ -109,11 +109,13 @@ onMount(() => {
 });
 </script>
 
-{#if !roomState.connected && !roomState.roomFull}
-  <AttractBackdrop />
-{/if}
 {#if !roomState.connected}
   <section class="start-screen" aria-label="Welcome to Dormouse">
+    {#if !roomState.roomFull}
+      <div class="attract-clip">
+        <AttractBackdrop />
+      </div>
+    {/if}
     <div class="panel">
       {#if roomState.roomClosed}
         <p class="eyebrow">Dormouse</p>
@@ -221,6 +223,13 @@ onMount(() => {
     place-items: center;
     overflow: auto;
     padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  .attract-clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
   }
 
   .panel {

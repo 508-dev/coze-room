@@ -29,6 +29,7 @@ describe("RoomRegistry private rooms", () => {
       name: "A private room",
       capacity: PUBLIC_ROOMS[0]?.capacity,
       seats: PUBLIC_ROOMS[0]?.seats,
+      packId: "dormouse-v0",
     });
     expect(registry.getByCode("  AMBER apple arch ")).toBe(registry.get(created.roomId));
   });

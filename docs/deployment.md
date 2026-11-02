@@ -63,13 +63,14 @@ With Docker and Bun installed, run:
 
 The script builds the production image, starts it on an unused localhost port,
 and checks health and startup logs, the pack manifest, real PNG bytes (not an
-LFS pointer), and a WebSocket `welcome`. It requires the `dormouse-v0` pack and
-is suitable for wiring into CI after the art-integration branch lands.
+LFS pointer), and a WebSocket `welcome`. It requires the `dormouse-v0` pack,
+which is on `main`. It is not wired into CI yet.
 
 PostgreSQL is private to the Coolify destination network. Its generated
 credentials are stored only in Coolify, and the application has `DATABASE_URL`.
-Nothing reads it yet; the guestbook will be its first consumer. Scheduled
-backups are **not configured yet**.
+The guestbook (#77) is its only consumer; if the database is unreachable at
+boot, the guestbook runs in memory instead. Scheduled backups are **not
+configured yet**.
 
 ### Redeploy
 
@@ -92,28 +93,20 @@ curl --fail https://dormouse.508.dev/health
 curl --fail https://dormouse.508.dev/
 ```
 
-To roll back, revert the bad commit on the configured branch and push it. The
+To roll back, revert the bad commit on `main` and push it. The
 same webhook path deploys the revert; the database volume is untouched.
 
-### Switch from the proof deployment to `main`
+### Branch
 
-The application currently deploys `deploy/coolify` because `main` did not yet
-contain the production Dockerfile when the live deployment was proven. After
-that branch merges, point the application at `main` and queue one deployment:
+The application deploys `main`. The first live deployment ran from the proof
+branch `deploy/coolify`, because `main` did not yet contain the production
+Dockerfile; after that branch merged (#69), the application was pointed at
+`main` on 2026-11-03 and the proof branch was deleted. Pushes to `main` now
+deploy automatically through the signed webhook.
 
-```bash
-curl --fail-with-body --silent --show-error -X PATCH \
-  "$COOLIFY_URL/api/v1/applications/d0bc7s4k4h58trxinxp3l7wh" \
-  -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  --data '{"git_branch":"main"}'
-
-curl --fail-with-body --silent --show-error -X POST \
-  "$COOLIFY_URL/api/v1/deploy?uuid=d0bc7s4k4h58trxinxp3l7wh" \
-  -H "Authorization: Bearer $COOLIFY_API_TOKEN"
-```
-
-Thereafter, pushes to `main` deploy automatically.
+Use the application UUID in the table above for every API call. A shared
+`.env` may carry a `COOLIFY_APP_UUID` belonging to a different application on
+the same instance.
 
 ## Media
 

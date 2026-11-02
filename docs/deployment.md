@@ -11,6 +11,73 @@ Room state lives in the server process memory. Postgres holds only the durable
 things: accounts, blocks, bans, presets, and the catalogue manifest. There is
 no Redis, because at this size a second datastore buys nothing.
 
+## Coolify production
+
+The v0.1 deployment is **https://dormouse.508.dev** on 508.dev's Coolify
+instance. It uses these resources in the `production` environment:
+
+| Resource | Name | UUID |
+|---|---|---|
+| Project | `dormouse` | `2p3ohmkh9sxth0juo2auv2hc` |
+| Application | `dormouse` | `d0bc7s4k4h58trxinxp3l7wh` |
+| PostgreSQL 17 | `dormouse-postgres` | `mw5h0jzuhgsqv67nlmhuzq9v` |
+
+The application builds the root `Dockerfile` on `Prod1`. The multi-stage build
+uses a digest-pinned Bun 1.4.0 Alpine image and frozen-lockfile installs. One
+Bun process listens on port 3000 and serves the Vite client, `/health`, and the
+`/ws` WebSocket on the same origin, so production needs no client URL override
+or separate web resource. Coolify health-checks `GET /health` and Traefik
+terminates TLS, including secure WebSockets.
+
+PostgreSQL is private to the Coolify destination network. Its generated
+credentials are stored only in Coolify, and the application has `DATABASE_URL`.
+Nothing reads it yet; the guestbook will be its first consumer. Scheduled
+backups are **not configured yet**.
+
+### Redeploy
+
+A signed GitHub push webhook deploys the configured application branch
+automatically. To queue the same deployment through the API, load the Coolify
+credentials into the shell without writing them into the repository, then run:
+
+```bash
+curl --fail-with-body --silent --show-error -X POST \
+  "$COOLIFY_URL/api/v1/deploy?uuid=d0bc7s4k4h58trxinxp3l7wh" \
+  -H "Authorization: Bearer $COOLIFY_API_TOKEN"
+```
+
+Inspect progress in the application's **Deployment Logs**, or with
+`GET /api/v1/deployments?uuid=d0bc7s4k4h58trxinxp3l7wh`. Verify a finished
+deployment with:
+
+```bash
+curl --fail https://dormouse.508.dev/health
+curl --fail https://dormouse.508.dev/
+```
+
+To roll back, revert the bad commit on the configured branch and push it. The
+same webhook path deploys the revert; the database volume is untouched.
+
+### Switch from the proof deployment to `main`
+
+The application currently deploys `deploy/coolify` because `main` did not yet
+contain the production Dockerfile when the live deployment was proven. After
+that branch merges, point the application at `main` and queue one deployment:
+
+```bash
+curl --fail-with-body --silent --show-error -X PATCH \
+  "$COOLIFY_URL/api/v1/applications/d0bc7s4k4h58trxinxp3l7wh" \
+  -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"git_branch":"main"}'
+
+curl --fail-with-body --silent --show-error -X POST \
+  "$COOLIFY_URL/api/v1/deploy?uuid=d0bc7s4k4h58trxinxp3l7wh" \
+  -H "Authorization: Bearer $COOLIFY_API_TOKEN"
+```
+
+Thereafter, pushes to `main` deploy automatically.
+
 ## Media
 
 R2 with a **custom domain** is the whole economics of this project. Egress is

@@ -450,7 +450,7 @@ experiment 2):
 - **Procedural motion is enough** to make the room feel inhabited: breathing,
   z's, rain on the glass, and palette-cycled lamp and CRT.
 
-**Since shown in the v0.1 build** (live QA, 2026-11-03): two neighbours on one
+**Shown in the v0.1 build** (live QA, 2026-11-03): two neighbours on one
 couch and three or more occupants at once, with no silhouette overlap; hammock
 and beanbag seats, inpainted into the empty room on purpose because SDXL would
 not draw either from the prompt; breathing without an occluder, because this
@@ -487,7 +487,7 @@ stays past the novelty.
 | Preset chat bubbles, no voice-over | [#60](https://github.com/508-dev/coze-room/issues/60) | done ([#73](https://github.com/508-dev/coze-room/pull/73)) |
 | Seat-based occupants, awake/asleep, procedural motion | [#54](https://github.com/508-dev/coze-room/issues/54) | done ([#71](https://github.com/508-dev/coze-room/pull/71), [#72](https://github.com/508-dev/coze-room/pull/72)) |
 | Three seats: couch, beanbag, hammock | — | done (four, as data) |
-| Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | built ([#67](https://github.com/508-dev/coze-room/pull/67), [#75](https://github.com/508-dev/coze-room/pull/75)); TV stays off until R2 ([#61](https://github.com/508-dev/coze-room/issues/61)) and human rights sign-off |
+| Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | built ([#67](https://github.com/508-dev/coze-room/pull/67), [#75](https://github.com/508-dev/coze-room/pull/75)); TV stays off until R2 ([#61](https://github.com/508-dev/coze-room/issues/61)) and human sign-off on the rights evidence |
 | Ambient audio bed | [#58](https://github.com/508-dev/coze-room/issues/58) | done ([#70](https://github.com/508-dev/coze-room/pull/70), [#78](https://github.com/508-dev/coze-room/pull/78)) |
 | Guestbook | [#56](https://github.com/508-dev/coze-room/issues/56) | done ([#77](https://github.com/508-dev/coze-room/pull/77)) |
 | Drift-off mode | — | done (throttle + dim) |

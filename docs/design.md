@@ -380,12 +380,27 @@ exactly what generation cannot keep consistent.
 - **The rest:** [#54](https://github.com/508-dev/coze-room/issues/54)'s scope,
   and the "composite avatar layers at runtime" line in `AGENTS.md`.
 
-**Not yet shown to work:**
+**Tested 2026-11-02** ([`EXPERIMENTS.md`](../tools/art/EXPERIMENTS.md),
+experiment 2):
 
-- inpainting a character into a seat of a generated room (so far only parts
-  on a lone mannequin have been tried);
-- whether head-only inpainting gives a convincing asleep sprite;
-- how recognisable one look stays across seats.
+- **Occupants inpaint into seats** at the right scale and in the room's
+  light, but only with a person-shaped mask per seat, taken from a first good
+  generation. With a rectangle, the room inside it is redrawn too and leaks
+  into the layer.
+- **Asleep sprites work about one seed in three.** A head drooping forward
+  reads as asleep; closed eyes alone are too small to see. The body cannot
+  drift.
+- **One look stays recognisable across seats by colour**, not by detail.
+- **Procedural motion is enough** to make the room feel inhabited: breathing,
+  z's, rain on the glass, and palette-cycled lamp and CRT.
+
+**Still unshown:**
+
+- a breathing sitter behind a foreground armrest;
+- blinking;
+- two neighbours on one couch;
+- hammock and beanbag seats. SDXL would not draw either furniture piece from
+  the prompt alone.
 
 ## Distribution
 

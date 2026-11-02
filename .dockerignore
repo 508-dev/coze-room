@@ -4,8 +4,7 @@
 .cursor
 .claude
 
-packs/
-catalogue/
+catalogue/media/
 tools/
 docs/
 scripts/

@@ -29,6 +29,19 @@ Bun process listens on port 3000 and serves the Vite client, `/health`, and the
 or separate web resource. Coolify health-checks `GET /health` and Traefik
 terminates TLS, including secure WebSockets.
 
+The image carries `packs/` for client art and runtime seat anchors, plus
+`catalogue/manifest.json` for server playback. Coolify's application setting
+`is_git_lfs_enabled` is enabled for the pack PNG and audio objects, and the
+Docker build fails if it finds an unresolved Git LFS pointer under `packs/`.
+Large mirrored media remains outside the image.
+
+`VITE_MEDIA_BASE_URL` is a Coolify **build-time-only** variable passed to the
+client build as a Docker build argument. It is deliberately empty until R2 is
+provisioned, which disables TV playback. Set it to the public custom media
+origin and redeploy to enable media. The R2 bucket will also need a CORS policy
+allowing `GET` from `https://dormouse.508.dev` so the browser can decode GIF
+previews.
+
 PostgreSQL is private to the Coolify destination network. Its generated
 credentials are stored only in Coolify, and the application has `DATABASE_URL`.
 Nothing reads it yet; the guestbook will be its first consumer. Scheduled

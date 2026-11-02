@@ -11,7 +11,14 @@ RUN bun install --frozen-lockfile
 COPY apps/client apps/client
 COPY apps/server apps/server
 COPY packages/protocol packages/protocol
-RUN bun run build
+COPY packs packs
+COPY catalogue catalogue
+RUN if grep -R -l -m 1 '^version https://git-lfs.github.com/spec/v1' packs; then \
+      echo "Git LFS pointer files found under packs/; enable Git LFS in Coolify." >&2; \
+      exit 1; \
+    fi
+ARG VITE_MEDIA_BASE_URL=""
+RUN VITE_MEDIA_BASE_URL="$VITE_MEDIA_BASE_URL" bun run build
 
 FROM oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb AS runtime
 
@@ -28,6 +35,8 @@ RUN bun install --frozen-lockfile --production
 COPY --from=build /app/apps/server/src apps/server/src
 COPY --from=build /app/packages/protocol/src packages/protocol/src
 COPY --from=build /app/apps/client/dist apps/client/dist
+COPY --from=build /app/packs packs
+COPY --from=build /app/catalogue catalogue
 
 USER bun
 EXPOSE 3000

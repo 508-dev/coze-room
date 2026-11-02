@@ -366,8 +366,13 @@ exactly what generation cannot keep consistent.
     colours along a ramp inside a masked region animates fire, candle glow,
     water, TV static and blinking lights with no frames. It suits assets that
     are all indexed against one fixed palette.
-  - Each seat gets a small foreground mask, drawn once and rendered after the
-    occupants, so a breathing sitter never slides over the armrest.
+  - **Foreground masks are conditional, not one per seat.** If an armrest or
+    other foreground furniture crosses the moving upper body, the pack must
+    provide an occluder in `furnitureFront` before release. This pack's breath
+    lines are above those furniture edges: lower bodies and furniture-contact
+    pixels stay fixed, so it needs no extra mask. Re-check that condition when
+    replacing sprites or moving breath lines; see
+    [`frontend.md`](frontend.md#v01-art-integration).
 - **Asset count is looks × seats × 2.** Six looks across four seats is 48
   sprites: minutes of GPU time, plus cleanup.
 

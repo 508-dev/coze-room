@@ -12,6 +12,12 @@ function audioParam(value = 1) {
 }
 
 function fakeContext() {
+  const oscillators: {
+    onended: (() => void) | null;
+    start: ReturnType<typeof vi.fn>;
+    stop: ReturnType<typeof vi.fn>;
+    disconnect: ReturnType<typeof vi.fn>;
+  }[] = [];
   const sources: {
     buffer: AudioBuffer | null;
     loop: boolean;
@@ -27,6 +33,11 @@ function fakeContext() {
     currentTime: 5,
     destination: {},
     resume: vi.fn(async () => {}),
+    createOscillator: vi.fn(() => {
+      const oscillator = { onended: null, start: vi.fn(), stop: vi.fn(), disconnect: vi.fn() };
+      oscillators.push(oscillator);
+      return oscillator;
+    }),
     createGain: vi.fn(() => ({
       gain: audioParam(),
       connect: vi.fn(),
@@ -48,7 +59,7 @@ function fakeContext() {
     }),
     decodeAudioData: vi.fn(async () => ({ duration: 165 }) as AudioBuffer),
   };
-  return { context: context as unknown as AudioContext, sources };
+  return { context: context as unknown as AudioContext, oscillators, sources };
 }
 
 afterEach(() => {
@@ -84,8 +95,7 @@ describe("ambient Web Audio playback", () => {
   });
 
   it("keeps audio stopped after the sleep timer until an explicit restart", async () => {
-    vi.useFakeTimers();
-    const { context } = fakeContext();
+    const { context, oscillators } = fakeContext();
     vi.stubGlobal("caches", undefined);
     vi.stubGlobal(
       "fetch",
@@ -98,7 +108,7 @@ describe("ambient Web Audio playback", () => {
     await engine.play("rain", { ogg: "/rain.ogg", m4a: "/rain.m4a" });
     const finished = vi.fn();
     engine.setSleepTimer(15, finished);
-    await vi.advanceTimersByTimeAsync(15 * 60 * 1000);
+    oscillators[0]?.onended?.();
     expect(finished).toHaveBeenCalledOnce();
     expect(
       await engine.play("clear-night", {

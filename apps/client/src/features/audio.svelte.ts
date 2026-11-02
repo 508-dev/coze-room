@@ -34,6 +34,9 @@ export class AudioFeature {
   previewing = $state<EnvironmentId | null>(null);
   playing = $state<EnvironmentId | null>(null);
   cooldownUntil = $state(0);
+  private clock = $state(Date.now());
+  cooldownSeconds = $derived(Math.max(0, Math.ceil((this.cooldownUntil - this.clock) / 1000)));
+  coolingDown = $derived(this.cooldownSeconds > 0);
   sleepMinutes = $state<SleepTimerMinutes>(0);
   volumes = $state<Record<AudioSourceId, number>>(loadVolumes());
   ready = $state(false);
@@ -68,6 +71,9 @@ export class AudioFeature {
     };
     window.addEventListener("pointerdown", onFirstGesture);
     window.addEventListener("keydown", onFirstGesture);
+    const clock = setInterval(() => {
+      this.clock = Date.now();
+    }, 1000);
 
     const off = [
       registerEnvironmentRequests(state.events, () =>
@@ -80,6 +86,7 @@ export class AudioFeature {
         this.hasEnvironment = true;
         this.environment = environment;
         this.cooldownUntil = cooldownUntil;
+        this.clock = Date.now();
         this.previewing = null;
         this.error = null;
         state.events.emit("environmentChanged", { id: environment });
@@ -87,6 +94,7 @@ export class AudioFeature {
       }),
       connection.on("environmentChangeRejected", ({ reason, cooldownUntil }) => {
         this.cooldownUntil = cooldownUntil;
+        this.clock = Date.now();
         this.previewing = null;
         this.error =
           reason === "cooldown"
@@ -98,6 +106,7 @@ export class AudioFeature {
 
     return () => {
       ++this.registrationGeneration;
+      clearInterval(clock);
       for (const remove of off) remove();
       window.removeEventListener("pointerdown", onFirstGesture);
       window.removeEventListener("keydown", onFirstGesture);
@@ -113,6 +122,7 @@ export class AudioFeature {
     this.hasEnvironment = true;
     this.environment = message.environment;
     this.cooldownUntil = message.environmentCooldownUntil;
+    this.clock = Date.now();
     this.previewing = null;
     this.error = null;
     state.events.emit("environmentChanged", { id: message.environment });
@@ -145,6 +155,7 @@ export class AudioFeature {
   }
 
   applyEnvironment(state: RoomState): void {
+    if (this.coolingDown) return;
     this.error = null;
     const wasDrifting = state.drifting;
     state.wake();

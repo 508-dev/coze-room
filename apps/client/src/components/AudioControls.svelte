@@ -1,14 +1,14 @@
 <script lang="ts">
-import type { EnvironmentId } from "@dormouse/protocol";
+import { ENVIRONMENT_IDS } from "@dormouse/protocol";
 import { SLEEP_TIMER_OPTIONS, type SleepTimerMinutes } from "../features/audio/sleep-timer";
 import type { RoomState } from "../state/room.svelte";
 
 const { state }: { state: RoomState } = $props();
 const audio = $derived(state.features.audio);
-const beds: { id: EnvironmentId; label: string }[] = [
-  { id: "rain", label: "Rain" },
-  { id: "clear-night", label: "Clear night" },
-];
+const beds = ENVIRONMENT_IDS.map((id) => ({
+  id,
+  label: id.replace("-", " ").replace(/^./, (letter) => letter.toUpperCase()),
+}));
 </script>
 
 <section class="audio-controls" aria-label="Sound and sleep timer">
@@ -34,7 +34,7 @@ const beds: { id: EnvironmentId; label: string }[] = [
   <div class="room-actions">
     <button
       type="button"
-      disabled={audio.activeEnvironment === audio.environment}
+      disabled={audio.activeEnvironment === audio.environment || audio.coolingDown}
       onclick={() => audio.applyEnvironment(state)}
     >
       Use for room
@@ -43,6 +43,9 @@ const beds: { id: EnvironmentId; label: string }[] = [
       <button type="button" onclick={() => audio.stopPreview()}>Stop preview</button>
     {/if}
   </div>
+  {#if audio.coolingDown}
+    <p class="hint">Preview freely · room can change in {audio.cooldownSeconds}s</p>
+  {/if}
 
   <label>
     Ambient volume

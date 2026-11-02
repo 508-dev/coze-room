@@ -35,6 +35,8 @@ save you from expecting finished avatars.
 | [`palette.hex`](palette.hex) | the Atropoeia palette, 48 colours: **the single source of truth** |
 | [`quantize.py`](quantize.py) | downsample + palette snap |
 | [`test_quantize.py`](test_quantize.py) | its tests |
+| [`verify.py`](verify.py) | refuse off-palette, partial-alpha, or off-grid PNGs |
+| [`test_verify.py`](test_verify.py) | its tests |
 
 ## Already set up? The short version
 
@@ -323,9 +325,17 @@ Do not:
 If a sprite has gone off-palette anyway, re-snap it:
 `python3 tools/art/quantize.py sprite.png fixed.png --cell 1`.
 
-Until the CI conformance check ([#53](https://github.com/508-dev/coze-room/issues/53))
-lands, nothing stops an off-palette PNG being committed. Re-snap anything you
-are unsure of.
+CI enforces conformance: [`verify.py`](verify.py) runs over `packs/` and fails
+on any off-palette, partial-alpha, or off-grid PNG
+([#53](https://github.com/508-dev/coze-room/issues/53)). Run it yourself before
+you finish:
+
+```bash
+python3 tools/art/verify.py packs/
+```
+
+It reports every offending file, its offending colours, and a sample
+coordinate, so you know exactly what to fix.
 
 Where finished sprites go is not this pipeline's job: see the asset issues
 ([#54](https://github.com/508-dev/coze-room/issues/54),
@@ -461,6 +471,8 @@ because it is in the official repositories and free software.
 python3 -m unittest discover -s tools/art
 ```
 
-These cover the properties `quantize.py` promises: cell-centre sampling, exact
-palette snapping, a hard alpha cutoff, and byte-identical output. They are not
-in CI yet; wiring them in belongs with the conformance check (#53).
+These cover the properties `quantize.py` promises — cell-centre sampling, exact
+palette snapping, a hard alpha cutoff, byte-identical output — and the checks
+`verify.py` enforces: exact palette membership, no partial alpha, and
+grid-aligned dimensions. CI runs the same command, so the two can never drift
+apart.

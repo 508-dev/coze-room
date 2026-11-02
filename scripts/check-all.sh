@@ -9,3 +9,7 @@ cd "$(dirname "$0")/.."
 ./scripts/typecheck.sh
 ./scripts/test.sh
 bun run build
+
+# Art conformance: palette and grid. Needs python3 + Pillow (see tools/art/README.md).
+python3 -m unittest discover -s tools/art
+python3 tools/art/verify.py packs/

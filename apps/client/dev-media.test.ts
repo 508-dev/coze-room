@@ -68,6 +68,9 @@ describe("dev-only rendition server", () => {
     "/outside.mp4",
     "/missing-link.mp4",
     "/sources/test.mp4",
+    "//test.mp4",
+    "/test.mp4%00",
+    "/.hidden.mp4",
   ])("never exposes arbitrary files: %s", async (path) => {
     expect((await fetch(`${base}${path}`)).status).toBe(404);
   });

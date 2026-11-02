@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
 import { realpath, stat } from "node:fs/promises";
 import type { RequestListener } from "node:http";
-import { resolve, sep } from "node:path";
+import { basename, resolve, sep } from "node:path";
 import { loadEnv, type Plugin } from "vite";
 
 /** One byte range, including suffix/open-ended requests from native media elements. */
@@ -31,7 +31,13 @@ export function localMediaHandler(directory: string): RequestListener {
     }
     try {
       const canonicalRoot = await realpath(root);
-      const file = await realpath(resolve(root, path.slice(1)));
+      // Keep the filesystem sink basename-only, in addition to the rendition allowlist above.
+      const candidate = resolve(root, basename(path));
+      if (!candidate.startsWith(`${root}${sep}`)) {
+        response.writeHead(404).end();
+        return;
+      }
+      const file = await realpath(candidate);
       if (!file.startsWith(`${canonicalRoot}${sep}`)) {
         response.writeHead(404).end();
         return;

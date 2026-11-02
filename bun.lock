@@ -16,6 +16,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@dormouse/protocol": "workspace:*",
+        "@pixi/gif": "3.0.1",
         "pixi.js": "^8.6.6",
       },
       "devDependencies": {
@@ -133,6 +134,8 @@
     "@oxc-project/types": ["@oxc-project/types@0.155.0", "", {}, "sha512-SeE8JPwW1xs1tHeNycjUtUBdhorRa8o4jlvjwk49R7/Z291i+4DQa7JJIgOm/TaYQZx+QrPQbVJ/9c8dMIZN8Q=="],
 
     "@pixi/colord": ["@pixi/colord@2.9.6", "", {}, "sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA=="],
+
+    "@pixi/gif": ["@pixi/gif@3.0.1", "", { "peerDependencies": { "pixi.js": "^8.0.0" } }, "sha512-oGl0nkbFAe1vaRLyIvGbJc3fcIrS8vF1E00cwjiV+9f1pYe072D+yijJxHsgYnXs6jdzERh+D0MqSrEag0jRzg=="],
 
     "@rolldown/binding-android-arm-eabi": ["@rolldown/binding-android-arm-eabi@1.2.15", "", { "os": "android", "cpu": "arm" }, "sha512-aLcgK9gIJ3YRvrrtfSBbRa27F5WrpiTaPulnFpsHPxpUHgFlSgnU4854MHwoRGEBhfRJDWCS2WQ7lIjskE9Olw=="],
 

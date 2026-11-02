@@ -36,6 +36,8 @@ The R2 credentials in particular are server-only.
 Vite reads the repository-root `.env`; only `VITE_` values reach the browser.
 When starting Vite directly, export `VITE_API_BASE_URL` explicitly (see
 [`development.md`](development.md)); the neutral names are not auto-mapped by Vite.
+Likewise set `VITE_MEDIA_BASE_URL` explicitly for playback. Empty means an
+intentional, gentle TV-off state, with no requests to external source hosts.
 
 ## How to add a client feature
 
@@ -72,6 +74,16 @@ layers use `context.events`: `on(tag, handler)` returns cleanup and `emit(tag,
 payload)` is typed. A phrase handler can emit a bubble event; a guestbook layer
 can emit an open-book event. Unsubscribe in feature cleanup / layer `destroy`.
 Neither needs to edit `Scene`, `RoomCanvas` or `App` to relay new event types.
+
+The media feature uses `mediaPreview` / `mediaPreviewRequest` to provide the TV
+layer with the current GIF URL, and `tvClick` to open its DOM watch view. Its
+GIF decoder (`@pixi/gif` 3.0.1, MIT) is driven by Scene's clock, not a separate
+animation loop. Drift-off removes the preview and swaps the native player to
+M4A once; waking resumes MP4 only if the watch view remains open. Native
+autoplay refusal gets an explicit tap-to-play/listen button. Local player
+controls never send play/pause commands to the room; local volume/mute survive
+rendition changes. The decoder and its bundled gifuct-js / binary-schema parser
+are MIT-licensed; notices ship in `public/third-party-notices.txt`.
 
 Slots render in this fixed order: `background`, `windowView`, `furnitureBack`,
 `avatars`, `furnitureFront`, `bubbles`, `overlay`. Use `furnitureBack` for the
@@ -136,6 +148,14 @@ Store its data under `sections.example`. Core validation only verifies that
 `sections` is an object; the feature **must validate its own data and relative
 file paths** before use, and fall back if absent/invalid. Use `pack.baseUrl` to
 load feature assets; set texture sampling to `nearest`. Do not hotlink.
+
+Media owns `sections.tv = { "screen": [x, y, width, height] }`. All four
+coordinates are integer room-space pixels; x/y must be nonnegative, width and
+height positive, and the screen wholly inside `room.size`. Missing or invalid
+data falls back to `[462, 116, 96, 54]` in the 640×360 placeholder (clamped for
+smaller packs). The tiny GIF is aspect-fitted with nearest sampling and no
+text on the canvas; titles, silent/with-sound shelf groups, and attribution
+belong to the DOM.
 
 Vite serves the repo-root `packs/` as `/packs` and `bun run build` includes it
 in `apps/client/dist/packs/`, except the root `packs/README.md`. Everything there

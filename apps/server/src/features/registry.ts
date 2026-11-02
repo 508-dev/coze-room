@@ -1,4 +1,5 @@
 import type { RoomFeatureFactory } from "./feature";
+import { createMediaFeature } from "./media";
 import { createPresenceFeature } from "./presence";
 import { createSeatingFeature } from "./seating";
 
@@ -6,4 +7,5 @@ import { createSeatingFeature } from "./seating";
 export const roomFeatures: readonly RoomFeatureFactory[] = [
   createPresenceFeature,
   createSeatingFeature,
+  createMediaFeature,
 ];

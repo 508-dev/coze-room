@@ -1,0 +1,93 @@
+import type { AvatarLook, MediaItem, ServerMessage } from "@dormouse/protocol";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { Room } from "../room";
+import { PUBLIC_ROOMS } from "../rooms";
+import { createMediaFeature, MEDIA_CATALOGUE } from "./media";
+import { SHELF_EPOCH, shelfAt } from "./media-playlist";
+
+const items: MediaItem[] = [
+  { id: "one", title: "One", year: 1900, silent: true, durationSeconds: 10, licence: "PD" },
+  { id: "two", title: "Two", year: 1900, silent: false, durationSeconds: 20.125, licence: "PD" },
+];
+const LOOK: AvatarLook = { tone: 0, head: 0, top: 0, accessory: 0 };
+const spec = PUBLIC_ROOMS[0];
+if (!spec) throw new Error("no room");
+function socket() {
+  const sent: ServerMessage[] = [];
+  return { sent, send: (raw: string) => sent.push(JSON.parse(raw)) };
+}
+afterEach(() => vi.restoreAllMocks());
+
+describe("house shelf scheduling", () => {
+  it("advances exactly on durations, loops and skips missed ticks without accumulating drift", () => {
+    expect(shelfAt(items, SHELF_EPOCH)).toEqual({ itemId: "one", startedAt: SHELF_EPOCH });
+    expect(shelfAt(items, SHELF_EPOCH + 9_999).itemId).toBe("one");
+    expect(shelfAt(items, SHELF_EPOCH + 10_000)).toEqual({
+      itemId: "two",
+      startedAt: SHELF_EPOCH + 10_000,
+    });
+    expect(shelfAt(items, SHELF_EPOCH + 30_125)).toEqual({
+      itemId: "one",
+      startedAt: SHELF_EPOCH + 30_125,
+    });
+    expect(shelfAt(items, SHELF_EPOCH + 30_125 * 500 + 11_000)).toEqual({
+      itemId: "two",
+      startedAt: SHELF_EPOCH + 30_125 * 500 + 10_000,
+    });
+  });
+
+  it("handles empty catalogues and rejects invalid durations", () => {
+    expect(shelfAt([], 123)).toEqual({ itemId: null, startedAt: 0 });
+    expect(() => shelfAt([{ ...(items[0] as MediaItem), durationSeconds: 0 }], 0)).toThrow();
+  });
+
+  it("joins mid-film, survives restart, broadcasts only changed snapshots and samples the clock", () => {
+    vi.spyOn(Date, "now").mockReturnValue(SHELF_EPOCH + 12_000);
+    const create = () => createMediaFeature(items);
+    const room = new Room(spec, [create]);
+    const first = socket();
+    room.join("a", "a", LOOK, first);
+    const welcome = first.sent.find((message) => message.t === "welcome");
+    expect(welcome).toMatchObject({
+      media: { itemId: "two", startedAt: SHELF_EPOCH + 10_000 },
+      mediaCatalogue: items,
+      mediaServerNow: SHELF_EPOCH + 12_000,
+    });
+    const restarted = new Room(spec, [create]);
+    const second = socket();
+    restarted.join("b", "b", LOOK, second);
+    expect(second.sent[0]).toMatchObject({
+      media: welcome?.t === "welcome" ? welcome.media : null,
+    });
+    first.sent.length = 0;
+    room.tick(SHELF_EPOCH + 12_500);
+    expect(first.sent).toHaveLength(0);
+    room.tick(SHELF_EPOCH + 31_000);
+    expect(first.sent).toEqual([
+      {
+        t: "media",
+        media: { itemId: "one", startedAt: SHELF_EPOCH + 30_125 },
+        serverNow: SHELF_EPOCH + 31_000,
+      },
+    ]);
+    vi.mocked(Date.now).mockReturnValue(SHELF_EPOCH + 32_000);
+    room.handleMessage("a", { t: "mediaSync", sentAt: 77 }, first);
+    expect(first.sent.at(-1)).toMatchObject({
+      t: "media",
+      sentAt: 77,
+      serverNow: SHELF_EPOCH + 32_000,
+    });
+    const count = first.sent.length;
+    room.handleMessage("a", { t: "mediaSync", sentAt: Number.NaN }, first);
+    expect(first.sent).toHaveLength(count);
+  });
+
+  it("publishes only the five mirror metadata entries, not source URLs or filesystem paths", () => {
+    expect(MEDIA_CATALOGUE).toHaveLength(5);
+    expect(MEDIA_CATALOGUE.some((item) => !item.silent)).toBe(true);
+    expect(JSON.stringify(MEDIA_CATALOGUE)).not.toMatch(/sourceUrl|sourceFile|upload.wikimedia/);
+    expect(MEDIA_CATALOGUE.find((item) => item.id === "spring")?.attribution).toContain(
+      "CC BY 4.0",
+    );
+  });
+});

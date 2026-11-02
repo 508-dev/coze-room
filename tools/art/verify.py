@@ -5,7 +5,9 @@ The enforcement half of the art pipeline (see tools/art/README.md). Where
 quantize.py produces conformant sprites, verify.py refuses anything that is
 not: an off-palette colour, partial alpha, or a dimension that is not a whole
 multiple of the grid. CI runs it over packs/ so an off-palette PNG cannot land
-by accident.
+by accident. Files that are not actually PNG (a renamed JPEG, an LFS pointer
+checked out without LFS) are rejected with an actionable message rather than
+silently skipped.
 
 Reuses quantize.load_palette so palette.hex has exactly one parser. Pillow
 only, no numpy. Pillow 12 deprecates Image.getdata, so pixels are read via
@@ -121,9 +123,21 @@ def main(argv: list[str] | None = None) -> int:
     for png in pngs:
         try:
             with Image.open(png) as image:
+                if image.format != "PNG":
+                    print(
+                        f"verify: {png}: not a PNG (detected {image.format or 'unidentified'}) — "
+                        "is Git LFS installed / was this checked out with LFS?",
+                        file=sys.stderr,
+                    )
+                    failed += 1
+                    continue
                 problems = verify_image(image, palette_set, grid=args.grid)
         except (OSError, ValueError) as error:
-            print(f"verify: {png}: {error}", file=sys.stderr)
+            print(
+                f"verify: {png}: {error} — not a readable PNG; "
+                "is Git LFS installed / was this checked out with LFS?",
+                file=sys.stderr,
+            )
             failed += 1
             continue
         if problems:

@@ -99,6 +99,34 @@ class VerifyCliTest(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn("skipping", err.getvalue())
 
+    def test_rejects_a_file_that_is_not_really_png(self):
+        # A JPEG renamed to .png must be rejected, not silently checked.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            Image.new("RGB", (2, 2), (255, 0, 0)).save(root / "fake.png", format="JPEG")
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = verify.main([str(root)])
+            self.assertEqual(code, 1)
+            self.assertIn("fake.png", err.getvalue())
+            self.assertIn("not a PNG", err.getvalue())
+
+    def test_reports_an_unreadable_png_with_an_lfs_hint(self):
+        # An LFS pointer (or any non-image bytes) must fail with an actionable hint.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pointer.png").write_text(
+                "version https://git-lfs.github.com/spec/v1\n"
+                "oid sha256:0000000000000000000000000000000000000000000000000000000000000000\n"
+                "size 4\n",
+            )
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = verify.main([str(root)])
+            self.assertEqual(code, 1)
+            self.assertIn("pointer.png", err.getvalue())
+            self.assertIn("Git LFS", err.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

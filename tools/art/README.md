@@ -334,8 +334,12 @@ you finish:
 python3 tools/art/verify.py packs/
 ```
 
-It reports every offending file, its offending colours, and a sample
-coordinate, so you know exactly what to fix.
+Generated assets are true-pixel images, so CI checks a grid of 1 (whole
+pixels). Once pack manifests can declare a grid
+([#39](https://github.com/508-dev/coze-room/issues/39)) the CI step will honour
+that; until then, use `--grid N` by hand to enforce a coarser grid. verify.py
+reports every offending file, its offending colours, and a sample coordinate,
+so you know exactly what to fix.
 
 Where finished sprites go is not this pipeline's job: see the asset issues
 ([#54](https://github.com/508-dev/coze-room/issues/54),

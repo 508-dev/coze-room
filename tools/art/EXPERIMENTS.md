@@ -94,6 +94,109 @@ generate each part *onto* it.
   yellows.
 - Faces are noise until hand-fixed, as everywhere else.
 
+## 2. Occupants inpainted into the seats of an empty room
+
+2026-11-02. Tests the three unproven parts of the per-seat occupant proposal in
+[`docs/design.md`](../../docs/design.md#proposed-not-agreed-per-seat-occupants-and-procedural-motion).
+
+**Answers:**
+
+1. **Can a character be inpainted into a seat of a generated room?** Yes,
+   with a **person-shaped mask** per seat. Rectangular masks fail.
+2. **Does head-only inpainting give an asleep sprite?** Partly. A head
+   drooping forward reads as asleep; closed eyes alone do not, at this size.
+   About one seed in three.
+3. **Does one look stay recognisable across seats?** By colour, not by
+   detail.
+
+A procedural-motion preview on the result reads as a living room (see
+[Motion preview](#motion-preview)).
+
+### Method
+
+1. **Empty room** at 2048×1152, which is 128×72 true pixels. After
+   `Pixel Art, PixArFK,`: `cosy dim living room at night, empty old couch,
+   empty beanbag, empty hammock by a large window, crt television glowing,
+   warm lamp light, nobody, game background`. Negative: the standard one plus
+   `people, person, character`. All four seeds came out empty. **None drew a
+   hammock or a beanbag.** Seed 4 was chosen: a couch with two seats, big
+   night windows, a CRT and a rug.
+2. **Seats:** couch-left, couch-right, and the floor (on the rug).
+3. **Looks:** `a person with a red ponytail wearing a rust hoodie` and `a
+   person with short curly brown hair wearing an olive green jacket`, each in
+   every seat, seeds 1 and 2.
+4. **Prompt:** the room plus the look:
+   `cosy dim living room at night, <look> <sitting on the old couch | sitting
+   cross-legged on the rug>, crt television glowing, warm lamp light, game
+   background`.
+5. **Inpaint** as in experiment 1 (`VAEEncodeForInpaint`, `grow_mask_by` 0,
+   denoise 1.0, composited back inside the mask) on the full-size room.
+6. **Layer:** cells inside the mask whose palette index differs from the
+   empty room's.
+
+### What happened
+
+- **Rectangular seat masks give dirty layers.** A person appeared in 10 of
+  12 runs (one drew two people), at the right scale: seated figures were
+  about 30 rows tall, which matches the ~28px avatar target, and they took on
+  the room's lighting. But the inpaint redraws *everything* in the rectangle,
+  window frames and couch texture included, so the layer is speckled with
+  background. Neither of the obvious fixes worked:
+  - **A threshold on colour change.** A rust hoodie on a rust couch is
+    camouflage. Any threshold that keeps the hoodie also keeps the redrawn
+    window.
+  - **Keeping only the largest connected blob.** It has the same problem.
+- **Person-shaped masks work.** Each seat gets a stepped
+  head/torso/legs silhouette. The model fills the silhouette with a person
+  and redraws nothing outside it, so every look in a seat gets the same
+  framing. 11 of 12 runs drew a person (the miss drew an ottoman). Junk is
+  left only at the silhouette's edges, a strip of window beside the head or
+  rug speckle at the feet: about a minute with the eraser per sprite.
+- **Take each silhouette from where the model puts a sitter, not from a
+  guess.** The first couch silhouette put the head 7 rows too high. The model
+  drew the head lower anyway, and the gap filled with redrawn window. Make
+  the silhouette from a first good generation, then reuse it for every look.
+- **Asleep, by inpainting only the head.** On the couch this was rows 28–38 ×
+  cols 35–45, with `asleep, eyes closed, head tilted to one side, sleeping`
+  added to the prompt. The body cannot change. What reads as asleep is **the
+  head drooping forward with hair over the face**, which came out on one of
+  three seeds on each sitter. Closing the eyes is a 1–2 pixel change that
+  barely registers at this size. Hand-draw closed eyes where wanted.
+- **Across seats.** "Curly brown hair, olive jacket" reads as the same person
+  on both couch seats and on the floor: same hair colour, same jacket colour.
+  The hair shape and jacket details vary. Identity comes from colour, so
+  write each look as a strong colour description.
+- **SDXL ignores furniture it finds unusual.** No hammock, no beanbag, in any
+  room. The furniture will need to be put in on purpose, for example by
+  inpainting it into the empty room, not just named in the prompt.
+
+### Motion preview
+
+The empty room with the awake couch sitter and the asleep floor sitter,
+animated in about 60 lines of code against the indexed sprites, with no drawn
+frames:
+
+- **Breathing:** everything above a per-sprite breath line drops 1 pixel and
+  comes back, on a 2-second cycle awake and 4 seconds asleep.
+- **z's:** a 4×4 glyph in the palette's lightest colour rises from the
+  sleeper's head.
+- **Rain:** 3-cell streaks in a muted teal falling down-left, drawn only on
+  cells of dark window glass.
+- **Lamp flicker and CRT shimmer:** palette cycling. Lamp cells step down
+  their yellow ramp at random; the CRT alternates along its teal ramp.
+
+It reads as a living room with people in it. The client would do the same
+per frame or in a shader.
+
+### Still open
+
+- **Foreground occluders.** Neither sitter overlapped an armrest, so a
+  breathing sitter sliding over furniture was not exercised.
+- **Blinking** was not tried.
+- **Two neighbours on one couch:** the two couch seats were never shown
+  occupied at once.
+- **Hammock and beanbag seats:** these need the furniture first.
+
 ## Tools evaluated, not adopted
 
 Checked 2026-10-31. Licences verified against the Hugging Face API and the

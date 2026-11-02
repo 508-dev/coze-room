@@ -2,6 +2,11 @@ import type { MediaState } from "@dormouse/protocol";
 
 export type PlaybackMode = "off" | "audio" | "video";
 
+export interface PlaybackRouting {
+  connect(element: HTMLMediaElement): Promise<MediaElementAudioSourceNode>;
+  setVolume(volume: number): void;
+}
+
 export function playbackMode(
   available: boolean,
   drifting: boolean,
@@ -43,18 +48,40 @@ export function attachPlayback(
   element: HTMLMediaElement,
   position: () => number,
   blocked: (value: boolean) => void,
-  settings?: { volume: number; muted: boolean },
+  settings?: { muted: boolean },
   silent = false,
+  routing?: PlaybackRouting,
 ) {
   let disposed = false;
-  if (settings) {
-    element.volume = settings.volume;
-    element.muted = silent || settings.muted;
-  }
+  let routedNode: MediaElementAudioSourceNode | null = null;
+  let routingPending = false;
+  if (settings) element.muted = silent || settings.muted;
+  if (routing) element.volume = 1;
+  const route = () => {
+    if (!routing || disposed || routedNode || routingPending) return;
+    routingPending = true;
+    void routing.connect(element).then(
+      (node) => {
+        routingPending = false;
+        if (disposed) {
+          node.disconnect();
+          return;
+        }
+        routedNode = node;
+      },
+      () => {
+        // Autoplay may require the explicit retry offered by start().
+        routingPending = false;
+      },
+    );
+  };
   const volumeChange = () => {
-    if (!settings) return;
-    settings.volume = element.volume;
-    if (!silent) settings.muted = element.muted;
+    if (routing && element.volume !== 1) {
+      routing.setVolume(element.volume);
+      // Web Audio owns audible gain; never multiply it by the native element.
+      element.volume = 1;
+    }
+    if (settings && !silent) settings.muted = element.muted;
   };
   const sync = (force = false) => {
     if (element.readyState < 1) return;
@@ -62,6 +89,7 @@ export function attachPlayback(
     if (force || Math.abs(element.currentTime - target) > 2) element.currentTime = target;
   };
   const start = () => {
+    route();
     sync(true);
     void element.play().then(
       () => {
@@ -75,12 +103,14 @@ export function attachPlayback(
   element.addEventListener("loadedmetadata", start);
   element.addEventListener("volumechange", volumeChange);
   const timer = setInterval(() => sync(), 15_000);
+  route();
   if (element.readyState >= 1) start();
   return {
     sync,
     start,
     destroy() {
       disposed = true;
+      routedNode?.disconnect();
       clearInterval(timer);
       element.removeEventListener("loadedmetadata", start);
       element.removeEventListener("volumechange", volumeChange);

@@ -15,8 +15,8 @@ export class MediaFeature {
   current = $state<MediaState>({ itemId: null, startedAt: 0 });
   offset = $state(0);
   watchOpen = $state(false);
-  /** Native controls are local, and must not jump back to full volume on drift-off. */
-  readonly audioSettings = { volume: 1, muted: false };
+  /** Native mute is local; audible volume belongs to the shared TV gain. */
+  readonly audioSettings = { muted: false };
   readonly base = import.meta.env.VITE_MEDIA_BASE_URL?.trim() ?? "";
   item = $derived(this.catalogue.find((item) => item.id === this.current.itemId));
 

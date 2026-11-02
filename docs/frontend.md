@@ -81,7 +81,8 @@ GIF decoder (`@pixi/gif` 3.0.1, MIT) is driven by Scene's clock, not a separate
 animation loop. Drift-off removes the preview and swaps the native player to
 M4A once; waking resumes MP4 only if the watch view remains open. Native
 autoplay refusal gets an explicit tap-to-play/listen button. Local player
-controls never send play/pause commands to the room; local volume/mute survive
+controls never send play/pause commands to the room. Native volume changes feed
+the shared TV gain while element volume stays at 1; local mute survives
 rendition changes. The decoder and its bundled gifuct-js / binary-schema parser
 are MIT-licensed; notices ship in `public/third-party-notices.txt`.
 

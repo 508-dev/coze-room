@@ -78,9 +78,8 @@ export function devMedia(): Plugin {
     name: "dormouse-dev-media",
     apply: "serve",
     configureServer(server) {
-      const directory =
-        process.env.DORMOUSE_MEDIA_DIR ??
-        loadEnv(server.config.mode, server.config.envDir, "DORMOUSE_MEDIA_DIR").DORMOUSE_MEDIA_DIR;
+      const environment = loadEnv(server.config.mode, server.config.envDir, "DORMOUSE_");
+      const directory = process.env.DORMOUSE_MEDIA_DIR ?? environment.DORMOUSE_MEDIA_DIR;
       if (directory) server.middlewares.use("/__media", localMediaHandler(directory));
     },
   };

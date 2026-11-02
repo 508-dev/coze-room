@@ -91,14 +91,21 @@ button, not break the room. The GIF is a short excerpt, not a synced full film.
 The server sends public catalogue metadata in welcome, plus `(itemId,
 startedAt)` and a clock sample; changes broadcast `media`. A `mediaSync`
 request every 30 seconds refreshes state and estimates server clock offset
-using its round-trip midpoint. The native player resyncs every 15 seconds and
-on media snapshots. The house schedule cycles manifest order from a fixed
+using its round-trip midpoint. The estimate is deliberately unsmoothed: the
+2-second seek deadband and 30-second resampling absorb occasional RTT outliers.
+The native player resyncs every 15 seconds and on media snapshots. The house
+schedule cycles manifest order from a fixed
 2026-01-01 UTC reference, calculating directly from durations: restarts,
 skipped ticks and empty rooms do not restart or cumulatively drift the film.
+An occupied room arms one boundary timeout for prompt title changes; the room
+tick remains a backstop. The timeout is cancelled when the room empties or its
+owner calls `room.destroy()` before retiring it.
 `media-playlist.ts` is the strategy seam for future user queues; this does not
 implement queue requests, skip votes, or play/pause propagation.
-The server imports `catalogue/manifest.json` at runtime, so deployment images
-must include `catalogue/` alongside the server and protocol workspaces.
+The server defensively reads and validates `catalogue/manifest.json` at feature
+construction, so deployment images should include `catalogue/` alongside the
+server and protocol workspaces. Missing/invalid catalogues warn once and leave
+the TV off without disabling presence, seating, or the rest of the server.
 
 R2 provisioning/upload (#61) and human approval of the manifest's pending
 rights reviews remain release prerequisites; local playback does not imply

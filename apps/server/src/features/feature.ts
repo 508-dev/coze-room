@@ -9,6 +9,8 @@ export interface RoomFeature {
   onMessage?(room: Room, id: string, message: ClientMessage): boolean | undefined;
   onTick?(room: Room, now: number): void;
   welcome?(room: Room, selfId: string): Partial<WelcomeFields>;
+  /** Release timers/resources when the owning room is retired. */
+  destroy?(): void;
 }
 
 export type RoomFeatureFactory = () => RoomFeature;

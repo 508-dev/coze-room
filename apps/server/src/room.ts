@@ -181,6 +181,13 @@ export class Room {
   send(id: string, message: ServerMessage): void {
     this.members.get(id)?.socket?.send(encode(message));
   }
+
+  /** Registry owners call this before discarding a room; safe to call more than once. */
+  destroy(): void {
+    for (const feature of this.features) feature.destroy?.();
+    this.features = [];
+    this.members.clear();
+  }
 }
 
 export type RoomSocket = ServerWebSocket<{ occupantId: string; roomId: string }>;

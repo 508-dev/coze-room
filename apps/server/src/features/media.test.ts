@@ -2,7 +2,8 @@ import type { AvatarLook, MediaItem, ServerMessage } from "@dormouse/protocol";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Room } from "../room";
 import { PUBLIC_ROOMS } from "../rooms";
-import { createMediaFeature, MEDIA_CATALOGUE } from "./media";
+import { createMediaFeature } from "./media";
+import { loadMediaCatalogue } from "./media-catalogue";
 import { SHELF_EPOCH, shelfAt } from "./media-playlist";
 
 const items: MediaItem[] = [
@@ -16,7 +17,10 @@ function socket() {
   const sent: ServerMessage[] = [];
   return { sent, send: (raw: string) => sent.push(JSON.parse(raw)) };
 }
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe("house shelf scheduling", () => {
   it("advances exactly on durations, loops and skips missed ticks without accumulating drift", () => {
@@ -83,11 +87,76 @@ describe("house shelf scheduling", () => {
   });
 
   it("publishes only the five mirror metadata entries, not source URLs or filesystem paths", () => {
+    const MEDIA_CATALOGUE = loadMediaCatalogue();
     expect(MEDIA_CATALOGUE).toHaveLength(5);
     expect(MEDIA_CATALOGUE.some((item) => !item.silent)).toBe(true);
     expect(JSON.stringify(MEDIA_CATALOGUE)).not.toMatch(/sourceUrl|sourceFile|upload.wikimedia/);
     expect(MEDIA_CATALOGUE.find((item) => item.id === "spring")?.attribution).toContain(
       "CC BY 4.0",
     );
+  });
+
+  it("switches exactly at a film boundary without waiting for a room tick, with no duplicate tick broadcast", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(SHELF_EPOCH + 9_000);
+    const room = new Room(spec, [() => createMediaFeature(items)]);
+    const first = socket();
+    room.join("a", "a", LOOK, first);
+    first.sent.length = 0;
+    vi.advanceTimersByTime(999);
+    expect(first.sent).toHaveLength(0);
+    vi.advanceTimersByTime(1);
+    expect(first.sent).toEqual([
+      {
+        t: "media",
+        media: { itemId: "two", startedAt: SHELF_EPOCH + 10_000 },
+        serverNow: SHELF_EPOCH + 10_000,
+      },
+    ]);
+    room.tick();
+    expect(first.sent).toHaveLength(1);
+    vi.advanceTimersByTime(20_125);
+    expect(first.sent.at(-1)).toMatchObject({
+      media: { itemId: "one", startedAt: SHELF_EPOCH + 30_125 },
+    });
+    room.destroy();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("clears boundary timers on teardown, does not arm empty rooms, and retains the tick as a backstop", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(SHELF_EPOCH + 9_000);
+    const room = new Room(spec, [() => createMediaFeature(items)]);
+    room.tick();
+    expect(vi.getTimerCount()).toBe(0);
+    const first = socket();
+    room.join("a", "a", LOOK, first);
+    expect(vi.getTimerCount()).toBe(1);
+    vi.clearAllTimers(); // Simulate an unavailable/delayed timer; state still catches up on tick.
+    vi.setSystemTime(SHELF_EPOCH + 31_000);
+    room.tick();
+    expect(first.sent.at(-1)).toMatchObject({
+      media: { itemId: "one", startedAt: SHELF_EPOCH + 30_125 },
+    });
+    expect(vi.getTimerCount()).toBe(1);
+    room.destroy();
+    room.destroy();
+    expect(vi.getTimerCount()).toBe(0);
+    vi.advanceTimersByTime(60_000);
+    room.tick();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("cancels the boundary timer on last eviction but not a transient disconnect", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(SHELF_EPOCH + 9_000);
+    const room = new Room(spec, [() => createMediaFeature(items)]);
+    room.join("a", "a", LOOK, socket());
+    room.disconnect("a");
+    expect(vi.getTimerCount()).toBe(1);
+    room.tick(SHELF_EPOCH + 130_000);
+    expect(room.occupants).toHaveLength(0);
+    expect(vi.getTimerCount()).toBe(0);
+    room.destroy();
   });
 });

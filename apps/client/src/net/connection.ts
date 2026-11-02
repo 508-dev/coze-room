@@ -1,12 +1,9 @@
 import type { AvatarLook, ClientMessage, ServerMessage } from "@dormouse/protocol";
 import { decode, encode } from "@dormouse/protocol";
+import { socketUrl } from "./api-base";
 
 export type Handler = (message: ServerMessage) => void;
 export type RoomTarget = { roomId: string } | { code: string };
-
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ??
-  (import.meta.env.DEV ? "http://127.0.0.1:8820" : window.location.origin);
 
 /**
  * A thin WebSocket wrapper. Reconnects with backoff, because this app is
@@ -29,8 +26,7 @@ export class Connection {
 
   connect(): void {
     if (this.closed) return;
-    const url = new URL("/ws", API_BASE);
-    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    const url = socketUrl("/ws");
     if ("code" in this.target) url.searchParams.set("code", this.target.code);
     else url.searchParams.set("room", this.target.roomId);
 

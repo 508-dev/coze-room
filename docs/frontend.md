@@ -39,6 +39,15 @@ When starting Vite directly, export `VITE_API_BASE_URL` explicitly (see
 Likewise set `VITE_MEDIA_BASE_URL` explicitly for playback. Empty means an
 intentional, gentle TV-off state, with no requests to external source hosts.
 
+`VITE_API_BASE_URL` is optional. `src/net/api-base.ts` is the single place that
+resolves the API origin for **every** client network call — the WebSocket and
+the REST endpoints alike. An explicit `VITE_API_BASE_URL` wins; otherwise a
+production build uses the page's own origin (the server serves the client,
+`/rooms`, `/rooms/private`, and `/ws` same-origin), and development falls back
+to `http://127.0.0.1:8820`. Never hard-code a host or port in client code;
+route network calls through that helper, and `scripts/check-no-localhost.sh`
+fails CI if a production bundle emits `127.0.0.1` or `localhost`.
+
 ## How to add a client feature
 
 1. **State and messages:** create `src/features/<feature>.svelte.ts` with a class

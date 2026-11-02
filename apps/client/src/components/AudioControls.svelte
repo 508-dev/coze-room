@@ -157,4 +157,10 @@ function minutesLabel(minutes: SleepTimerMinutes): string {
   select {
     margin-left: 0.25rem;
   }
+
+  @media (max-width: 40rem) and (orientation: portrait) {
+    .audio-controls {
+      width: 100%;
+    }
+  }
 </style>

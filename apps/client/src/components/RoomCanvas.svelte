@@ -39,4 +39,12 @@ onMount(() => {
     position: absolute;
     inset: 0;
   }
+
+  @media (max-width: 40rem) and (orientation: portrait) {
+    .stage {
+      top: env(safe-area-inset-top);
+      bottom: auto;
+      height: 56.25vw;
+    }
+  }
 </style>

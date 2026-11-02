@@ -155,6 +155,13 @@ onDestroy(() => {
     pointer-events: none;
   }
 
+  @media (max-width: 40rem) and (orientation: portrait) {
+    .bubbles {
+      top: env(safe-area-inset-top);
+      height: 56.25vw;
+    }
+  }
+
   .bubble {
     position: absolute;
   }

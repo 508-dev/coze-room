@@ -63,9 +63,10 @@ intentional, gentle TV-off state, with no requests to external source hosts.
    `StartScreen.svelte` owns public/private room selection and the attract-mode entry.
    Its `AttractBackdrop` runs a real `Scene` from a deterministic local script, with no
    WebSocket or occupant identity/count UI. In development, `/?attract` renders the same
-   rig unblurred for screenshots and visual regression checks. The backdrop renders at
-   half resolution and 8 fps, pauses in hidden tabs, and is destroyed when its host
-   screen unmounts.
+   rig unblurred for screenshots and visual regression checks. The stylised backdrop
+   covers and crops its viewport so portrait screens do not collapse it to a letterboxed
+   strip. It renders at half resolution and 8 fps, pauses in hidden tabs, and is destroyed
+   when its host screen unmounts.
 4. **Wire/server:** follow the corresponding checklist in `development.md`.
 
 For feature-specific canvas/DOM events, extend `SceneEvents` in `room/events.ts`

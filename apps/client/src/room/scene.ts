@@ -27,6 +27,7 @@ export class Scene {
       preference: "webgl",
       antialias: false,
       roundPixels: true,
+      resolution: Math.min(window.devicePixelRatio || 1, 2),
       autoDensity: true,
     });
     this.host = host;

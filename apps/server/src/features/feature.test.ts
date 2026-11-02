@@ -1,5 +1,10 @@
-import type { AvatarLook, ServerMessage } from "@dormouse/protocol";
-import { describe, expect, it, vi } from "vitest";
+import {
+  type AvatarLook,
+  type ClientMessage,
+  decode,
+  type ServerMessage,
+} from "@dormouse/protocol";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Room } from "../room";
 import { PUBLIC_ROOMS } from "../rooms";
 import type { RoomFeature, RoomFeatureFactory } from "./feature";
@@ -14,7 +19,80 @@ function recorder() {
   return { sent, send: (raw: string) => sent.push(JSON.parse(raw) as ServerMessage) };
 }
 
+afterEach(() => vi.restoreAllMocks());
+
 describe("room features", () => {
+  it.each([
+    { t: "join", name: 123, look: LOOK },
+    { t: "join", name: "bad", look: { ...LOOK, top: 8 } },
+    { t: "takeSeat", seatId: 123 },
+  ])("silently drops invalid core messages before dispatch: %j", (raw) => {
+    const onMessage = vi.fn();
+    const room = new Room(spec, [() => ({ onMessage })]);
+    const socket = recorder();
+    room.join("a", "ada", LOOK, socket);
+    socket.sent.length = 0;
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const message = decode<ClientMessage>(JSON.stringify(raw));
+    if (!message) throw new Error("invalid test envelope");
+    expect(() => room.handleMessage("a", message, socket)).not.toThrow();
+    expect(room.occupants).toMatchObject([{ name: "ada", seatId: null, look: LOOK }]);
+    expect(socket.sent).toHaveLength(0);
+    expect(onMessage).not.toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+  });
+
+  it.each(["onJoin", "welcome", "onMessage"] as const)(
+    "contains and logs a throwing %s hook per message",
+    (hook) => {
+      const error = new Error("feature failure");
+      const feature: RoomFeature = {
+        [hook]: () => {
+          throw error;
+        },
+      };
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      const room = new Room(spec, [() => feature]);
+      const socket = recorder();
+      expect(() => {
+        room.handleMessage("a", { t: "join", name: "ada", look: LOOK }, socket);
+        if (hook === "onMessage") room.handleMessage("a", { t: "pong" }, socket);
+      }).not.toThrow();
+      expect(log).toHaveBeenCalledExactlyOnceWith(
+        "room message handler failed",
+        {
+          roomId: spec.id,
+          type: hook === "onMessage" ? "pong" : "join",
+        },
+        error,
+      );
+      const recovered = vi.fn(() => true);
+      feature.onMessage = recovered;
+      room.handleMessage("a", { t: "pong" }, socket);
+      expect(recovered).toHaveBeenCalledOnce();
+      expect(log).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("runs onJoin before the core joined broadcast", () => {
+    const order: string[] = [];
+    const room = new Room(spec, [
+      () => ({
+        onJoin() {
+          order.push("hook");
+        },
+      }),
+    ]);
+    room.join("a", "ada", LOOK, {
+      send(raw) {
+        if (JSON.parse(raw).t === "joined") order.push("broadcast");
+      },
+    });
+    order.length = 0;
+    room.join("b", "bo", LOOK, recorder());
+    expect(order).toEqual(["hook", "broadcast"]);
+  });
+
   it("runs join before collecting welcome fields, keeping the original envelope", () => {
     const order: string[] = [];
     const feature: RoomFeature = {

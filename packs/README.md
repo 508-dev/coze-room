@@ -8,6 +8,6 @@ Select a pack with `RoomSpec.packId`; without it the scene uses placeholders.
 It uses only Atropoeia colours and the repository's GPL-3.0 licence. There is no
 third-party source. Real PNG/OGG content must go through Git LFS and the provenance
 and licence checks in `COPYRIGHT.md`. Do not put secrets or unlicensed assets here:
-the entire directory is public in dev and included in client builds.
+the directory is public in dev and included in client builds, except this root README.
 
 See `docs/frontend.md` for the schema and extension contract.

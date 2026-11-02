@@ -20,5 +20,3 @@ export const PUBLIC_ROOMS: RoomSpec[] = [
     ],
   },
 ];
-
-export const findRoom = (id: string): RoomSpec | undefined => PUBLIC_ROOMS.find((r) => r.id === id);

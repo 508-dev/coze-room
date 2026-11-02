@@ -51,7 +51,7 @@ export function packAssets(directory: string): Plugin {
           const path = resolve(directory, entry.name);
           const fileName = `${prefix}/${entry.name}`;
           if (entry.isDirectory()) await emit(path, fileName);
-          else if (entry.isFile()) {
+          else if (entry.isFile() && fileName !== "packs/README.md") {
             this.emitFile({ type: "asset", fileName, source: await readFile(path) });
           }
         }

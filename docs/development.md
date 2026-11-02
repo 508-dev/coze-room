@@ -32,8 +32,10 @@ VITE_API_BASE_URL="http://127.0.0.1:$API_PORT" bun run --cwd apps/client dev
 
 Open `WEB_URL` from `./scripts/worktree-ports.sh env`. Verify the room name and
 occupant count appear, then click a seat: a brighter circle moves above it.
-Repeat after resizing so a 2x room is centred/letterboxed. The network panel
-should show the same JSON `join`, `welcome`, `takeSeat`, `moved` messages.
+Repeat after resizing so a 2x room is centred/letterboxed, then at 360×640 with
+device pixel ratio 2 or 3: the whole room fits fractionally, without cropping,
+and seats stay clickable in CSS coordinates (renderer resolution caps at 2x).
+The network panel should show the same JSON `join`, `welcome`, `takeSeat`, `moved` messages.
 `/packs/test-fixture/manifest.json` should load; builds must contain the same
 fixture under `apps/client/dist/packs/`. To test selection, set a room's optional
 `packId` to `test-fixture` locally; a nonexistent id should warn and keep seats.
@@ -55,10 +57,14 @@ Keep transport and room lifetime independent of feature logic:
    `room.handleMessage(id, message, socket)`.
 3. `onMessage(room, id, message)` returns `true` only for owned messages (stopping
    dispatch); return `undefined` for everything else. Non-join messages dispatch
-   only for known occupants. `room.occupants`/`room.spec` expose room state;
+   only for known occupants. The core validates join names, look indices (0–7)
+   and seat IDs before dispatch; features must validate their own payloads.
+   Message-handler exceptions are caught/logged and abort only that message.
+   `room.occupants`/`room.spec` expose room state;
    `room.broadcast(message)` and `room.send(id, message)` deliver typed responses.
    Do not keep a socket reference in the feature.
-4. `onJoin` runs after membership insertion and before welcome is collected.
+4. `onJoin` runs after membership insertion, before the core `joined` broadcast
+   and before welcome is collected.
    `welcome(room, selfId)` contributes `Partial<WelcomeFields>`; keep to your own
    fields. The core retains empty media/guestbook defaults for wire compatibility.
    `onLeave` runs **after actual eviction**, not at transient disconnect (the

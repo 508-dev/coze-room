@@ -79,9 +79,11 @@ children by depth. No shaders or environmental effects are implemented yet.
 
 `RoomSpec.packId` selects `/packs/<packId>/manifest.json` (or the public base
 in `VITE_PACK_BASE_URL`). No selection uses a 640×360 placeholder. Dimensions
-come from the pack otherwise. The room is centred at the largest **integer**
-scale fitting the viewport, minimum 1x, with letterboxing. A viewport smaller
-than the logical room centre-crops at 1x rather than applying fractional blur.
+come from the pack otherwise. The room is centred and letterboxed, with the
+largest **integer** scale that fits when at least 1x fits. Smaller viewports use
+a fractional fit so portrait phones keep the whole room visible, without cropping.
+Rendering uses device resolution capped at 2x with auto-density; pointer events
+remain in CSS pixels and textures remain nearest-sampled.
 Seat coordinates and placeholder shapes are unchanged, including the beanbag
 extending below y=360 and the standing marker at y=380; there is no room-edge mask.
 
@@ -124,7 +126,8 @@ file paths** before use, and fall back if absent/invalid. Use `pack.baseUrl` to
 load feature assets; set texture sampling to `nearest`. Do not hotlink.
 
 Vite serves the repo-root `packs/` as `/packs` and `bun run build` includes it
-in `apps/client/dist/packs/`. Everything there is public. PNG/OGG are Git LFS;
+in `apps/client/dist/packs/`, except the root `packs/README.md`. Everything there
+is public. PNG/OGG are Git LFS;
 keep provenance and commercial-use licence evidence for real assets. The
 `test-fixture` pack is only an original two-colour technical swatch.
 

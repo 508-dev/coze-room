@@ -59,6 +59,7 @@ async function init() {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.loadPack.mockReset();
+  vi.stubGlobal("window", { devicePixelRatio: 1 });
   vi.stubGlobal(
     "ResizeObserver",
     class {
@@ -70,6 +71,25 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Scene orchestration", () => {
+  it.each([
+    [0, 1],
+    [1, 1],
+    [1.5, 1.5],
+    [3, 2],
+  ])(
+    "renders DPR %s at resolution %s without changing CSS pointer coordinates",
+    async (dpr, resolution) => {
+      vi.stubGlobal("window", { devicePixelRatio: dpr });
+      const scene = await init();
+      expect(scene.app.init).toHaveBeenCalledWith(
+        expect.objectContaining({ resolution, autoDensity: true, antialias: false }),
+      );
+      scene.drawRoom(room);
+      expect(scene.toRoomPoint({ x: 1020, y: 590 })).toMatchObject({ x: 480, y: 250 });
+      scene.destroy();
+    },
+  );
+
   it("attaches to named slots and forwards room, occupant and clock hooks", async () => {
     const scene = await init();
     const context = mocks.attach.mock.calls[0]?.[0];

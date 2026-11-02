@@ -8,6 +8,7 @@ import type {
 } from "@dormouse/protocol";
 import { encode, PROTOCOL_VERSION } from "@dormouse/protocol";
 import type { ServerWebSocket } from "bun";
+import { isValidCoreClientMessage } from "./client-message";
 import type { RoomFeature, RoomFeatureFactory } from "./features/feature";
 import { roomFeatures } from "./features/registry";
 
@@ -76,13 +77,23 @@ export class Room {
 
   /** Transport only decodes; room features own the joined-client message routes. */
   handleMessage(id: string, message: ClientMessage, socket: Socket): void {
-    if (message.t === "join") {
-      this.join(id, message.name.slice(0, 24), message.look, socket);
-      return;
-    }
-    if (!this.members.has(id)) return;
-    for (const feature of this.features) {
-      if (feature.onMessage?.(this, id, message)) return;
+    if (!isValidCoreClientMessage(message)) return;
+    try {
+      if (message.t === "join") {
+        this.join(id, message.name.slice(0, 24), message.look, socket);
+        return;
+      }
+      if (!this.members.has(id)) return;
+      for (const feature of this.features) {
+        if (feature.onMessage?.(this, id, message)) return;
+      }
+    } catch (error) {
+      // Abort this message, not the socket handler; never log the untrusted payload.
+      console.error(
+        "room message handler failed",
+        { roomId: this.spec.id, type: message.t },
+        error,
+      );
     }
   }
 

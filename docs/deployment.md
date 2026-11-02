@@ -42,6 +42,17 @@ origin and redeploy to enable media. The R2 bucket will also need a CORS policy
 allowing `GET` from `https://dormouse.508.dev` so the browser can decode GIF
 previews.
 
+### Proxy and client IPs
+
+`TRUST_PROXY=1` is set as a **runtime** environment variable. The private-rooms
+rate limiter uses it to read only the right-most `X-Forwarded-For` hop; earlier
+application versions ignore it. The application has `ports_exposes=3000` and no
+`ports_mappings`, so the port is available on Coolify's internal Docker network
+but is not published on the host. Traefik is the only public ingress. Keep
+Traefik's `forwardedHeaders.insecure` disabled (the default) so clients cannot
+inject trusted forwarding hops. No custom Traefik access-log query redaction is
+configured for the private-room `code` parameter.
+
 ### Production image smoke test
 
 With Docker and Bun installed, run:

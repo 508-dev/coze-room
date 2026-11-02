@@ -90,8 +90,8 @@ jobs:
       - name: Tests
         run: bun run test
 
-      - name: Build
-        run: bun run build
+      - name: Build and verify no localhost in the production bundle
+        run: ./scripts/check-no-localhost.sh
 
   compose:
     needs: changes

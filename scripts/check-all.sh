@@ -8,7 +8,8 @@ cd "$(dirname "$0")/.."
 ./scripts/lint.sh
 ./scripts/typecheck.sh
 ./scripts/test.sh
-bun run build
+# Build the production bundle and fail on any localhost API base it contains.
+./scripts/check-no-localhost.sh
 
 # Art conformance: palette and grid. Needs python3 + Pillow (see tools/art/README.md).
 python3 -m unittest discover -s tools/art

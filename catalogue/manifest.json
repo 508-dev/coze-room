@@ -10,7 +10,7 @@
       "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d2/A_Trip_down_market_street_%281906%29.webm",
       "sourceFile": "sources/market-street.webm",
       "licence": "Public domain (US copyright expired)",
-      "rightsEvidence": "US film by the Miles Brothers, published in 1906. The Library of Congress description cited on the file page records a contemporary 28 April 1906 advertisement (https://hdl.loc.gov/loc.mbrsmi/cmp003.01142). Wikimedia Commons marks this exact file PD-US because US copyright has expired (https://commons.wikimedia.org/wiki/File:A_Trip_down_market_street_(1906).webm#Licensing). Publication in the US before 1930 places it in the US public domain. The mirrored VP8-only file has no soundtrack or restoration claim.",
+      "rightsEvidence": "US film by the Miles Brothers, published in 1906. The Library of Congress record (LCCN 00694408) records a contemporary 28 April 1906 advertisement (https://www.loc.gov/item/00694408/). Wikimedia Commons marks this exact file PD-US because US copyright has expired (https://commons.wikimedia.org/wiki/File:A_Trip_down_market_street_(1906).webm#Licensing). Publication in the US before 1930 places it in the US public domain. The mirrored VP8-only file has no soundtrack or restoration claim.",
       "checkedBy": "Kimi K3.1 Pro — pending human review",
       "checkedAt": "2026-11-02",
       "previewStartSeconds": 30
@@ -24,7 +24,7 @@
       "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c4/The_New_York_Hat.webm",
       "sourceFile": "sources/new-york-hat.webm",
       "licence": "Public domain (US copyright expired)",
-      "rightsEvidence": "US Biograph production released 5 December 1912. Silent Era's Progressive Silent Film List records that release date and 'Current rights holder: Public domain [USA]' (https://www.silentera.com/PSFL/data/N/NewYorkHat1912.html). Wikimedia Commons marks this exact file PD-US-expired (https://commons.wikimedia.org/wiki/File:The_New_York_Hat.webm#Licensing). US publication in 1912, before 1930, means its US copyright has expired. The mirrored file is a silent VP8-only transfer.",
+      "rightsEvidence": "US Biograph production released 5 December 1912. Silent Era's Progressive Silent Film List records that release date and 'Current rights holder: Public domain [USA]' (https://www.silentera.com/PSFL/data/N/NewYorkHat1912.html). Wikimedia Commons marks this exact file PD-US-expired (https://commons.wikimedia.org/wiki/File:The_New_York_Hat.webm#Licensing). US publication in 1912, before 1930, means its US copyright has expired. The mirrored file is a YouTube-derived Commons transfer (video2commons), VP8 with no audio stream; the human reviewer should eyeball it for added intertitles or tinting.",
       "checkedBy": "Kimi K3.1 Pro — pending human review",
       "checkedAt": "2026-11-02",
       "previewStartSeconds": 30
@@ -38,7 +38,7 @@
       "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Panorama_from_Times_Building%2C_New_York.webm",
       "sourceFile": "sources/times-building.webm",
       "licence": "Public domain (US copyright expired)",
-      "rightsEvidence": "US silent short directed by Wallace McCutcheon and published in 1905. Wikimedia Commons identifies the date, author, and US origin and marks this exact file PD-US because its US copyright has expired (https://commons.wikimedia.org/wiki/File:Panorama_from_Times_Building,_New_York.webm#Licensing). US publication in 1905, before 1930, places it in the US public domain. The mirrored original is a VP8-only file with no added soundtrack.",
+      "rightsEvidence": "US silent short by American Mutoscope and Biograph, published in 1905. The Library of Congress credits Wallace McCutcheon as camera, not director, and records United States, American Mutoscope and Biograph, 1905, with copyright registered 11 April 1905 (https://www.loc.gov/item/00694370/). Wikimedia Commons identifies the date, author, and US origin and marks this exact file PD-US because its US copyright has expired (https://commons.wikimedia.org/wiki/File:Panorama_from_Times_Building,_New_York.webm#Licensing). US publication in 1905, before 1930, places it in the US public domain. The mirrored file is a YouTube-derived Commons transfer (video2commons), VP8 with no audio stream; the human reviewer should eyeball it for added intertitles or tinting. The duration difference (mirrored 166.9 seconds versus LOC's '2:04 at 15 fps') is likely due to the transfer frame rate.",
       "checkedBy": "Kimi K3.1 Pro — pending human review",
       "checkedAt": "2026-11-02"
     },
@@ -51,7 +51,7 @@
       "sourceUrl": "https://video.blender.org/object-storage/web_videos/3d95fb3d-c866-42c8-9db1-fe82f48ccb95-804.mp4",
       "sourceFile": "sources/spring.mp4",
       "licence": "CC BY 4.0",
-      "rightsEvidence": "The official Blender Studio Spring about page states that the open movie is released under Creative Commons Attribution 4.0, including commercial reuse with attribution, and that exceptions are clearly indicated (https://studio.blender.org/projects/spring/pages/about/). The licence is https://creativecommons.org/licenses/by/4.0/. No exception applies to the mirrored film file or its original score.",
+      "rightsEvidence": "The canonical project page is https://studio.blender.org/projects/spring/. The official Blender Studio Spring about page states that the open movie is released under Creative Commons Attribution 4.0, including commercial reuse with attribution, and that exceptions are clearly indicated (https://studio.blender.org/projects/spring/pages/about/). The licence is https://creativecommons.org/licenses/by/4.0/. No exception applies to the mirrored film file or its original score.",
       "attribution": "Spring — © Blender Foundation | cloud.blender.org/spring. Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/. Dormouse transcodes the film and generates a short GIF excerpt.",
       "checkedBy": "Kimi K3.1 Pro — pending human review",
       "checkedAt": "2026-11-02",

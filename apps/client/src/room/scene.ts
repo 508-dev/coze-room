@@ -8,6 +8,11 @@ import { PLACEHOLDER_SIZE, roomTransform } from "./space";
 
 const DRIFT_FPS = 5;
 
+export interface SceneInitOptions {
+  resolution?: number;
+  maxFPS?: number;
+}
+
 /** Pixi lifecycle, logical room transform, clock and feature-layer orchestration. */
 export class Scene {
   readonly app = new Application();
@@ -20,19 +25,20 @@ export class Scene {
   private observer: ResizeObserver | null = null;
   private host: HTMLElement | null = null;
 
-  async init(host: HTMLElement, events: RoomEvents): Promise<void> {
+  async init(host: HTMLElement, events: RoomEvents, options: SceneInitOptions = {}): Promise<void> {
     await this.app.init({
       background: 0x0d0b14,
       resizeTo: host,
       preference: "webgl",
       antialias: false,
       roundPixels: true,
-      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      resolution: options.resolution ?? Math.min(window.devicePixelRatio || 1, 2),
       autoDensity: true,
     });
     this.host = host;
     host.appendChild(this.app.canvas);
     this.app.stage.addChild(this.root);
+    this.app.ticker.maxFPS = options.maxFPS ?? 0;
     const slots = new Map(SCENE_SLOTS.map((name) => [name, this.root.addChild(new Container())]));
     this.layers = sceneLayers.map((create) => create());
     for (const layer of this.layers) {
@@ -94,6 +100,11 @@ export class Scene {
   /** Audio, presence and DOM remain live while the renderer throttles hard. */
   driftOff(active: boolean): void {
     this.app.ticker.maxFPS = active ? DRIFT_FPS : 0;
+  }
+
+  setPaused(paused: boolean): void {
+    if (paused) this.app.ticker.stop();
+    else this.app.ticker.start();
   }
 
   destroy(): void {

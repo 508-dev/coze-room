@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import type { RoomState } from "../state/room.svelte";
+import AttractBackdrop from "./AttractBackdrop.svelte";
 
 const { state }: { state: RoomState } = $props();
 
@@ -11,3 +12,7 @@ onMount(() => {
   return () => state.dispose();
 });
 </script>
+
+{#if !state.connected}
+  <AttractBackdrop />
+{/if}

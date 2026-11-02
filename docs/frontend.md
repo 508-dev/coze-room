@@ -59,6 +59,11 @@ When starting Vite directly, export `VITE_API_BASE_URL` explicitly (see
 3. **DOM:** add a Svelte component to `src/components/feature-panels.ts` for room
    chrome. It receives `{ state: RoomState }`. `App.svelte` need not change.
    `StartScreen.svelte` is the auto-join placeholder for room selection/attract mode.
+   Its `AttractBackdrop` runs a real `Scene` from a deterministic local script, with no
+   WebSocket or occupant identity/count UI. In development, `/?attract` renders the same
+   rig unblurred for screenshots and visual regression checks. The backdrop renders at
+   half resolution and 8 fps, pauses in hidden tabs, and is destroyed when its host
+   screen unmounts.
 4. **Wire/server:** follow the corresponding checklist in `development.md`.
 
 For feature-specific canvas/DOM events, extend `SceneEvents` in `room/events.ts`

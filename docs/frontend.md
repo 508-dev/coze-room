@@ -85,7 +85,10 @@ a fractional fit so portrait phones keep the whole room visible, without croppin
 Rendering uses device resolution capped at 2x with auto-density; pointer events
 remain in CSS pixels and textures remain nearest-sampled.
 The public room uses `dormouse-v0` at 128×72; server seat anchors come directly
-from its `art.json`. Rooms without a pack retain the original placeholder shapes.
+from its `art.json`. The unbundled server reads and validates this optional file
+once at startup. Missing, unreadable or malformed metadata logs one warning and
+falls back to the original seat coordinates with no `packId`; the room remains
+joinable with placeholder rendering. Rooms without a pack retain those shapes.
 
 Manifest v1 (`src/room/packs/manifest.ts`):
 

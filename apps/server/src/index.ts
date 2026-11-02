@@ -14,6 +14,7 @@ setInterval(() => {
 }, TICK_MS);
 
 const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
+  hostname: process.env.API_HOST ?? "0.0.0.0",
   port: PORT,
 
   fetch(request, srv) {
@@ -71,4 +72,4 @@ const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
   },
 });
 
-console.info(`dormouse server listening on http://127.0.0.1:${server.port}`);
+console.info(`dormouse server listening on http://${server.hostname}:${server.port}`);

@@ -4,6 +4,13 @@
 .cursor
 .claude
 
+packs/
+catalogue/
+tools/
+docs/
+scripts/
+extras/
+
 .env
 .env.*
 !.env.example

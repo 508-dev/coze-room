@@ -1,4 +1,4 @@
-import { existsSync, statSync } from "node:fs";
+import { realpathSync, statSync } from "node:fs";
 import { extname, resolve, sep } from "node:path";
 
 const CLIENT_DIST = resolve(import.meta.dir, "../../client/dist");
@@ -24,6 +24,17 @@ function fileResponse(path: string, immutable = false): Response {
   });
 }
 
+function realFile(path: string): string | null {
+  try {
+    const realDist = realpathSync(CLIENT_DIST);
+    const realPath = realpathSync(path);
+    if (!realPath.startsWith(`${realDist}${sep}`) || !statSync(realPath).isFile()) return null;
+    return realPath;
+  } catch {
+    return null;
+  }
+}
+
 /** Serve the Vite build in production. Development keeps using Vite directly. */
 export function serveStatic(pathname: string): Response {
   let decoded: string;
@@ -33,14 +44,16 @@ export function serveStatic(pathname: string): Response {
     return new Response("not found", { status: 404 });
   }
 
+  if (decoded.includes("\0")) return new Response("not found", { status: 404 });
+
   const relative = decoded === "/" ? "index.html" : decoded.replace(/^\/+/, "");
   const path = resolve(CLIENT_DIST, relative);
   if (!path.startsWith(`${CLIENT_DIST}${sep}`)) return new Response("not found", { status: 404 });
-  if (existsSync(path) && statSync(path).isFile()) {
-    return fileResponse(path, decoded.startsWith("/assets/"));
-  }
+  const file = realFile(path);
+  if (file) return fileResponse(file, decoded.startsWith("/assets/"));
 
   // Extensionless paths belong to the SPA; missing asset files stay real 404s.
-  if (!extname(relative) && existsSync(INDEX_FILE)) return fileResponse(INDEX_FILE);
+  const index = extname(relative) ? null : realFile(INDEX_FILE);
+  if (index) return fileResponse(index);
   return new Response("not found", { status: 404 });
 }

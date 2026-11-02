@@ -22,6 +22,7 @@ ENV NODE_ENV=production \
 COPY package.json bun.lock bunfig.toml ./
 COPY apps/server/package.json apps/server/
 COPY packages/protocol/package.json packages/protocol/
+# @dormouse/protocol resolves through the copied packages/protocol workspace.
 RUN bun install --frozen-lockfile --production
 
 COPY --from=build /app/apps/server/src apps/server/src

@@ -21,6 +21,7 @@ jobs:
       typescript: ${{ steps.filter.outputs.typescript }}
       infra: ${{ steps.filter.outputs.infra }}
       workflow: ${{ steps.filter.outputs.workflow }}
+      art: ${{ steps.filter.outputs.art }}
     steps:
       - uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
         with:
@@ -56,6 +57,9 @@ jobs:
               - ".env.example"
             workflow:
               - ".github/workflows/**"
+            art:
+              - "tools/art/**"
+              - "packs/**"
 
   typescript:
     needs: changes
@@ -105,12 +109,42 @@ jobs:
       - name: Validate Compose config
         run: docker compose -f compose.yml --env-file .env.example config
 
+  art:
+    needs: changes
+    if: needs.changes.outputs.art == 'true' || needs.changes.outputs.workflow == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+          # *.png is Git LFS (.gitattributes), so fetch the real bytes, not the
+          # pointer files -- otherwise verify.py fails on every checked-out PNG.
+          lfs: true
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow
+        run: python3 -m pip install Pillow==12.3.0
+
+      - name: Art unit tests
+        run: python3 -m unittest discover -s tools/art
+
+      - name: Palette and grid conformance
+        run: python3 tools/art/verify.py packs/
+
   ci-passed:
     if: always()
     needs:
       - changes
       - typescript
       - compose
+      - art
     runs-on: ubuntu-latest
     steps:
       - name: Check required jobs
@@ -118,18 +152,19 @@ jobs:
           changes_result='${{ needs.changes.result }}'
           typescript_result='${{ needs.typescript.result }}'
           compose_result='${{ needs.compose.result }}'
+          art_result='${{ needs.art.result }}'
           if [ "$changes_result" != "success" ]; then
             echo "The changes job did not pass: changes=${changes_result}" >&2
             exit 1
           fi
           # Component jobs may be skipped by the path filter. That is healthy
           # only when path detection itself succeeded, which is checked above.
-          for result in "$typescript_result" "$compose_result"; do
+          for result in "$typescript_result" "$compose_result" "$art_result"; do
             case "$result" in
               success|skipped)
                 ;;
               *)
-                echo "A required CI job did not pass: changes=${changes_result}, typescript=${typescript_result}, compose=${compose_result}" >&2
+                echo "A required CI job did not pass: changes=${changes_result}, typescript=${typescript_result}, compose=${compose_result}, art=${art_result}" >&2
                 exit 1
                 ;;
             esac

@@ -1,11 +1,8 @@
-import type { Graphics } from "pixi.js";
-
 /**
- * A hand-authored 5x7 bitmap font, rendered as 1px rects with nearest-neighbour
- * (vector) fill. Because it is drawn as hard rectangles there is no texture to
- * filter, so it stays crisp at every integer room scale — and because we wrote
- * it ourselves there is no font asset to licence or bundle. A space is narrower
- * than a glyph for natural word spacing.
+ * A hand-authored 5x7 bitmap font. It is drawn as hard 1px rectangles (now into
+ * a canvas), so there is no texture to filter and it stays crisp at any integer
+ * screen scale — and because we wrote it ourselves there is no font asset to
+ * licence or bundle. A space is narrower than a glyph for natural word spacing.
  */
 export const CHAR_WIDTH = 5;
 export const CHAR_HEIGHT = 7;
@@ -50,7 +47,7 @@ function glyphWidth(ch: string): number {
   return ch === " " ? SPACE_WIDTH : CHAR_WIDTH;
 }
 
-/** Width in room pixels of `text`, including inter-glyph spacing. */
+/** Width in font pixels of `text`, including inter-glyph spacing. */
 export function pixelTextWidth(text: string): number {
   let width = 0;
   for (const ch of text) {
@@ -59,12 +56,9 @@ export function pixelTextWidth(text: string): number {
   return text.length === 0 ? 0 : width - GLYPH_SPACING;
 }
 
-/**
- * Appends the filled pixels of `text` to a Graphics as 1px rects, starting at
- * (x, y). The caller fills once afterwards with the desired colour.
- */
-export function drawPixelText(g: Graphics, text: string, x: number, y: number): void {
-  let cx = x;
+/** Visit every filled pixel of `text`, in font-pixel coordinates (origin top-left). */
+export function forEachPixel(text: string, visit: (x: number, y: number) => void): void {
+  let cx = 0;
   for (const ch of text) {
     if (ch === " ") {
       cx += SPACE_WIDTH + GLYPH_SPACING;
@@ -79,7 +73,7 @@ export function drawPixelText(g: Graphics, text: string, x: number, y: number): 
     for (let row = 0; row < CHAR_HEIGHT; row++) {
       const line = glyph[row] ?? "";
       for (let col = 0; col < line.length; col++) {
-        if (line[col] === "#") g.rect(cx + col, y + row, 1, 1);
+        if (line[col] === "#") visit(cx + col, row);
       }
     }
     cx += CHAR_WIDTH + GLYPH_SPACING;

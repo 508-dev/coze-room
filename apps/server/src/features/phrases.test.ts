@@ -40,6 +40,14 @@ describe("RateLimiter", () => {
     expect(limiter.allow("b", 0)).toBe(true);
   });
 
+  it("forgets a key's bucket on demand", () => {
+    const limiter = new RateLimiter(1, 3_000);
+    expect(limiter.allow("a", 0)).toBe(true);
+    expect(limiter.allow("a", 0)).toBe(false);
+    limiter.forget("a");
+    expect(limiter.allow("a", 0)).toBe(true);
+  });
+
   it("never grants tokens on a backwards clock", () => {
     const limiter = new RateLimiter(1, 3_000);
     expect(limiter.allow("a", 5_000)).toBe(true);
@@ -125,5 +133,34 @@ describe("phrases feature", () => {
     room.handleMessage("a", { t: "awake" }, a.socket);
     // "awake" is presence's message: phrases must not have broadcast anything.
     expect(a.sent).toEqual([]);
+  });
+
+  it("resets an occupant's bucket on eviction, not on a transient disconnect", () => {
+    const now = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    const room = new Room(spec, [createPhrasesFeature]);
+    const a = recorder();
+    room.join("a", "ada", LOOK, a.socket);
+    a.sent.length = 0;
+
+    // Exhaust the burst.
+    for (let i = 0; i < 3; i++) {
+      room.handleMessage("a", { t: "say", phraseId: "greeting-hey" }, a.socket);
+    }
+    expect(saidCount(a.sent)).toBe(3);
+
+    // A dropped connection alone must keep the bucket during the grace period.
+    room.disconnect("a");
+    expect(room.occupants).toHaveLength(1);
+
+    // Actual eviction frees the bucket.
+    room.tick(now + 3 * 60_000);
+    expect(room.occupants).toHaveLength(0);
+
+    // Rejoining under the same id gets a fresh burst, proving onLeave forgot it.
+    room.join("a", "ada", LOOK, a.socket);
+    a.sent.length = 0;
+    room.handleMessage("a", { t: "say", phraseId: "greeting-hey" }, a.socket);
+    expect(saidCount(a.sent)).toBe(1);
   });
 });

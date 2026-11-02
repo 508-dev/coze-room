@@ -1,5 +1,6 @@
 <script lang="ts">
 import AttractBackdrop from "./components/AttractBackdrop.svelte";
+import BubbleOverlay from "./components/BubbleOverlay.svelte";
 import RoomCanvas from "./components/RoomCanvas.svelte";
 import RoomChrome from "./components/RoomChrome.svelte";
 import StartScreen from "./components/StartScreen.svelte";
@@ -20,6 +21,7 @@ const attractPreview =
   <main class:drifting={state.drifting}>
     {#if state.room}
       <RoomCanvas {state} />
+      <BubbleOverlay {state} />
       <RoomChrome {state} />
     {/if}
     <StartScreen {state} />

@@ -30,4 +30,9 @@ export class RateLimiter {
     bucket.tokens -= 1;
     return true;
   }
+
+  /** Drop a key's bucket, e.g. when an occupant is actually evicted. */
+  forget(key: string): void {
+    this.buckets.delete(key);
+  }
 }

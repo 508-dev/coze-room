@@ -24,8 +24,10 @@ export class Scene {
   private generation = 0;
   private observer: ResizeObserver | null = null;
   private host: HTMLElement | null = null;
+  private events: RoomEvents | null = null;
 
   async init(host: HTMLElement, events: RoomEvents, options: SceneInitOptions = {}): Promise<void> {
+    this.events = events;
     await this.app.init({
       background: 0x0d0b14,
       resizeTo: host,
@@ -59,6 +61,7 @@ export class Scene {
     const transform = roomTransform(width, height, this.size);
     this.root.scale.set(transform.scale);
     this.root.position.set(transform.x, transform.y);
+    this.events?.emit("roomTransform", { ...transform, width, height });
   }
 
   toRoomPoint(global: PointData): PointData {
@@ -114,6 +117,7 @@ export class Scene {
     for (const layer of this.layers) layer.destroy();
     this.layers = [];
     this.host = null;
+    this.events = null;
     this.app.destroy(true, { children: true });
   }
 }

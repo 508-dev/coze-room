@@ -1,6 +1,5 @@
 import { createAvatarsLayer } from "./avatars";
 import { createBackgroundLayer } from "./background";
-import { createBubblesLayer } from "./bubbles";
 import { createEnvironmentLayer } from "./environment";
 import type { SceneLayerFactory } from "./layer";
 import { createLightsLayer } from "./lights";
@@ -14,5 +13,4 @@ export const sceneLayers: readonly SceneLayerFactory[] = [
   createSeatsLayer,
   createAvatarsLayer,
   createMediaLayer,
-  createBubblesLayer,
 ];

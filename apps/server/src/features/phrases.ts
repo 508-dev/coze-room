@@ -7,6 +7,10 @@ const SAY_BURST = 3;
 const SAY_REFILL_MS = 3_000;
 
 export function createPhrasesFeature(): RoomFeature {
+  // Buckets are keyed by occupant id. A reconnect currently mints a new
+  // occupant id (a core upgrade bug), so the limit resets across a reconnect;
+  // stable reconnect identity will fix that. Until then the limit is per
+  // connection-session.
   const limiter = new RateLimiter(SAY_BURST, SAY_REFILL_MS);
   return {
     onMessage(room, id, message) {
@@ -20,6 +24,11 @@ export function createPhrasesFeature(): RoomFeature {
       room.touchById(id);
       room.broadcast({ t: "said", id, phraseId: message.phraseId, at: now });
       return true;
+    },
+    onLeave(_room, occupant) {
+      // Eviction frees the bucket; a transient disconnect keeps it through the
+      // reconnect grace period (onLeave runs only after actual eviction).
+      limiter.forget(occupant.id);
     },
   };
 }

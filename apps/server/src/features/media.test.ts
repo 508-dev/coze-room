@@ -1,6 +1,7 @@
 import type { AvatarLook, MediaItem, ServerMessage } from "@dormouse/protocol";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Room } from "../room";
+import { RoomRegistry } from "../room-registry";
 import { PUBLIC_ROOMS } from "../rooms";
 import { createMediaFeature } from "./media";
 import { loadMediaCatalogue } from "./media-catalogue";
@@ -158,5 +159,39 @@ describe("house shelf scheduling", () => {
     expect(room.occupants).toHaveLength(0);
     expect(vi.getTimerCount()).toBe(0);
     room.destroy();
+  });
+
+  it("gives private rooms independent media instances and clears only the destroyed room's timer", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(SHELF_EPOCH + 9_000);
+    const codes = ["amber-apple-arch", "cedar-chalk-cherry"];
+    const registry = new RoomRegistry(() => codes.shift() ?? "dawn-dimple-dolphin");
+    const first = registry.createPrivateRoom();
+    const second = registry.createPrivateRoom();
+    const firstRoom = registry.get(first.roomId);
+    const secondRoom = registry.get(second.roomId);
+    if (!firstRoom || !secondRoom) throw new Error("private rooms were not created");
+    const firstSocket = socket();
+    const secondSocket = socket();
+    firstRoom.join("a", "ada", LOOK, firstSocket);
+    secondRoom.join("b", "bo", LOOK, secondSocket);
+    expect(vi.getTimerCount()).toBe(2);
+    const firstWelcome = firstSocket.sent.find((message) => message.t === "welcome");
+    const secondWelcome = secondSocket.sent.find((message) => message.t === "welcome");
+    expect(firstWelcome).toMatchObject({
+      media: secondWelcome?.t === "welcome" ? secondWelcome.media : null,
+    });
+    expect(registry.destroyPrivateRoom(first.roomId)).toBe(true);
+    expect(vi.getTimerCount()).toBe(1);
+    expect(firstRoom.occupants).toEqual([]);
+    firstSocket.sent.length = 0;
+    secondSocket.sent.length = 0;
+    vi.advanceTimersByTime(503_000);
+    expect(firstSocket.sent).toEqual([]);
+    expect(secondSocket.sent.some((message) => message.t === "media")).toBe(true);
+    expect(registry.getByCode(second.code)).toBe(secondRoom);
+    expect(vi.getTimerCount()).toBe(1);
+    registry.destroyPrivateRoom(second.roomId);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

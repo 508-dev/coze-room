@@ -10,6 +10,7 @@ export function createMediaLayer(): SceneLayer {
   const clock = new Ticker();
   let context: LayerContext;
   let screen = tvScreen();
+  let placeholderFrame = true;
   let gif: AnimatedGIF | null = null;
   let url: string | null = null;
   let request: AbortController | null = null;
@@ -20,12 +21,10 @@ export function createMediaLayer(): SceneLayer {
     const [x, y, w, h] = screen;
     tv.position.set(x, y);
     tv.hitArea = new Rectangle(-4, -4, w + 8, h + 8);
-    frame
-      .clear()
-      .rect(-4, -4, w + 8, h + 8)
-      .fill(0x332b40)
-      .rect(0, 0, w, h)
-      .fill(0x171620);
+    frame.clear();
+    // Real packs paint their own CRT bezel; never cover it with the placeholder frame.
+    if (placeholderFrame) frame.rect(-4, -4, w + 8, h + 8).fill(0x332b40);
+    frame.rect(0, 0, w, h).fill(0x171620);
     if (gif) {
       const fit = Math.min(w / gif.texture.width, h / gif.texture.height);
       const scale = fit >= 1 ? Math.floor(fit) : fit;
@@ -77,6 +76,7 @@ export function createMediaLayer(): SceneLayer {
     },
     onRoomChange(_room, pack) {
       screen = tvScreen(pack?.manifest);
+      placeholderFrame = !pack;
       layout();
     },
     update(_dt, now) {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { PackManifest } from "../room/packs/manifest";
+import realPack from "../../../../packs/dormouse-v0/manifest.json";
+import { type PackManifest, validateManifest } from "../room/packs/manifest";
 import { tvScreen } from "./media-pack";
 
 const pack: PackManifest = {
@@ -9,6 +10,9 @@ const pack: PackManifest = {
 };
 
 describe("TV pack screen", () => {
+  it("uses the artist-authored real CRT screen, not the placeholder", () => {
+    expect(tvScreen(validateManifest(realPack))).toEqual([106, 30, 8, 6]);
+  });
   it("accepts integer room-space rectangles", () => {
     expect(tvScreen({ ...pack, sections: { tv: { screen: [20, 30, 64, 36] } } })).toEqual([
       20, 30, 64, 36,

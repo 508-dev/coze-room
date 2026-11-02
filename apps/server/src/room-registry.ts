@@ -71,9 +71,7 @@ export class RoomRegistry {
     if (!meta) return false;
     this.privateRooms.delete(id);
     this.privateCodes.delete(meta.code);
-    // #75 adds Room.destroy(); stay no-op-safe until that implementation lands.
-    const room = this.rooms.get(id) as (Room & { destroy?: () => void }) | undefined;
-    room?.destroy?.();
+    this.rooms.get(id)?.destroy();
     this.rooms.delete(id);
     return true;
   }

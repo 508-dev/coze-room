@@ -17,9 +17,9 @@ function recorder() {
   return { sent, socket: { send: (raw: string) => sent.push(JSON.parse(raw) as ServerMessage) } };
 }
 
-/** A room-shaped stand-in with controllable occupants; the feature only reads spec + occupants. */
+/** A room-shaped stand-in with controllable occupants; the feature reads spec + occupants + broadcast. */
 function roomWith(occupants: Occupant[]): Room {
-  return { spec, occupants } as unknown as Room;
+  return { spec, occupants, broadcast: () => {} } as unknown as Room;
 }
 
 function occupant(id: string, asleep: boolean): Occupant {
@@ -55,6 +55,18 @@ describe("MemoryGuestbookStore", () => {
       { date: "2026-11-01", sleepers: 1, sleeperHours: 1 },
     ]);
   });
+
+  it("bounds each room to the most recent nights", async () => {
+    const store = new MemoryGuestbookStore();
+    for (let i = 0; i < 20; i++) {
+      const day = String(i + 1).padStart(2, "0");
+      await store.save("the-back-room", `2026-10-${day}`, { sleepers: i, sleeperHours: i });
+    }
+    const list = await store.list("the-back-room", 100);
+    expect(list).toHaveLength(14);
+    expect(list[0]?.date).toBe("2026-10-20");
+    expect(list[13]?.date).toBe("2026-10-07");
+  });
 });
 
 describe("guestbook store selection", () => {
@@ -72,7 +84,32 @@ describe("guestbook store selection", () => {
 });
 
 describe("guestbook feature", () => {
-  it("serves recent completed nights in the welcome snapshot, newest first", async () => {
+  it("pushes the loaded guestbook to the first arrival after its (empty) welcome", async () => {
+    const store = new MemoryGuestbookStore();
+    await store.save("the-back-room", "2026-11-01", { sleepers: 12, sleeperHours: 30 });
+    await store.save("the-back-room", "2026-11-02", { sleepers: 8, sleeperHours: 21 });
+
+    const feature = createGuestbookFeature(store, () => local(2026, 11, 3, 7, 0));
+    const room = new Room(spec, [() => feature]);
+    const a = recorder();
+    room.join("a", "ada", LOOK, a.socket);
+
+    // The synchronous welcome predates the async store load.
+    const welcome = a.sent.find((m) => m.t === "welcome");
+    expect(welcome).toMatchObject({ guestbook: [], lastNight: "" });
+
+    await settle();
+    const push = a.sent.find((m) => m.t === "guestbook");
+    expect(push).toMatchObject({
+      guestbook: [
+        { date: "2026-11-02", sleepers: 8, sleeperHours: 21 },
+        { date: "2026-11-01", sleepers: 12, sleeperHours: 30 },
+      ],
+      lastNight: "2026-11-02",
+    });
+  });
+
+  it("serves recent completed nights and lastNight to later joiners, newest first", async () => {
     const store = new MemoryGuestbookStore();
     await store.save("the-back-room", "2026-11-01", { sleepers: 12, sleeperHours: 30 });
     await store.save("the-back-room", "2026-11-02", { sleepers: 8, sleeperHours: 21 });
@@ -92,6 +129,7 @@ describe("guestbook feature", () => {
         { date: "2026-11-02", sleepers: 8, sleeperHours: 21 },
         { date: "2026-11-01", sleepers: 12, sleeperHours: 30 },
       ],
+      lastNight: "2026-11-02",
     });
   });
 

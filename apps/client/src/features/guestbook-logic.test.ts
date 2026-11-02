@@ -1,6 +1,6 @@
-import type { Occupant } from "@dormouse/protocol";
+import type { GuestbookEntry, Occupant } from "@dormouse/protocol";
 import { describe, expect, it } from "vitest";
-import { companionsAtWake, joinNames } from "./guestbook-logic";
+import { companionsAtWake, joinNames, lastNightSleepers } from "./guestbook-logic";
 
 const LOOK = { tone: 0, head: 0, top: 0, accessory: 0 };
 
@@ -42,5 +42,25 @@ describe("joinNames", () => {
     expect(joinNames(["ada"])).toBe("ada");
     expect(joinNames(["ada", "bo"])).toBe("ada and bo");
     expect(joinNames(["ada", "bo", "cy"])).toBe("ada, bo, and cy");
+  });
+});
+
+describe("lastNightSleepers", () => {
+  const entries: GuestbookEntry[] = [
+    { date: "2026-11-02", sleepers: 8, sleeperHours: 21 },
+    { date: "2026-11-01", sleepers: 12, sleeperHours: 30 },
+  ];
+
+  it("selects by calendar date, not array position", () => {
+    expect(lastNightSleepers(entries, "2026-11-02")).toBe(8);
+    expect(lastNightSleepers(entries, "2026-11-01")).toBe(12);
+  });
+
+  it("returns zero when last night had no sleepers rather than an older count", () => {
+    expect(lastNightSleepers(entries, "2026-11-03")).toBe(0);
+  });
+
+  it("returns null before any snapshot has arrived", () => {
+    expect(lastNightSleepers(entries, "")).toBeNull();
   });
 });

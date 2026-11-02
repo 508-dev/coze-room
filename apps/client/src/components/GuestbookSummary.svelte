@@ -7,8 +7,8 @@ const { state }: { state: RoomState } = $props();
 
 const feature = $derived(state.features.guestbook);
 
-function nightLabel(entry: GuestbookEntry, index: number): string {
-  return index === 0 ? "last night" : entry.date;
+function nightLabel(entry: GuestbookEntry): string {
+  return entry.date === feature.lastNight ? "last night" : entry.date;
 }
 </script>
 
@@ -28,10 +28,10 @@ function nightLabel(entry: GuestbookEntry, index: number): string {
       <p class="empty">no one has slept here yet</p>
     {:else}
       <ul>
-        {#each feature.entries as entry, index (entry.date)}
+        {#each feature.entries as entry (entry.date)}
           <li>
             <strong>{entry.sleepers}</strong> slept here
-            <span class="meta">· {entry.sleeperHours}h · {nightLabel(entry, index)}</span>
+            <span class="meta">· {entry.sleeperHours}h · {nightLabel(entry)}</span>
           </li>
         {/each}
       </ul>

@@ -16,6 +16,9 @@ export interface GuestbookStore {
 
 const rowKey = (roomId: string, night: string): string => `${roomId}\u0000${night}`;
 
+/** Bound the in-memory fallback: keep only the most recent nights per room. */
+const MEMORY_RETENTION_NIGHTS = 14;
+
 /** The fallback that keeps the room up when Postgres is absent or unreachable. */
 export class MemoryGuestbookStore implements GuestbookStore {
   private readonly rows = new Map<string, GuestbookEntry>();
@@ -30,6 +33,7 @@ export class MemoryGuestbookStore implements GuestbookStore {
       sleepers: tally.sleepers,
       sleeperHours: tally.sleeperHours,
     });
+    this.prune(roomId);
   }
 
   async list(roomId: string, limit: number): Promise<GuestbookEntry[]> {
@@ -39,6 +43,16 @@ export class MemoryGuestbookStore implements GuestbookStore {
       .map(([, entry]) => entry)
       .sort((a, b) => (a.date < b.date ? 1 : -1));
     return entries.slice(0, limit);
+  }
+
+  /** Keep the newest `MEMORY_RETENTION_NIGHTS` nights for one room. */
+  private prune(roomId: string): void {
+    const prefix = `${roomId}\u0000`;
+    const keys = [...this.rows.keys()]
+      .filter((key) => key.startsWith(prefix))
+      .sort()
+      .reverse();
+    for (const key of keys.slice(MEMORY_RETENTION_NIGHTS)) this.rows.delete(key);
   }
 }
 

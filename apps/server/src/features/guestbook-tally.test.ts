@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GuestbookTally, HOUR_MS, nightKey } from "./guestbook-tally";
+import { GuestbookTally, HOUR_MS, nightKey, previousNightKey } from "./guestbook-tally";
 
 const local = (y: number, m: number, d: number, h: number, min = 0) =>
   new Date(y, m - 1, d, h, min).getTime();
@@ -15,6 +15,14 @@ describe("nightKey", () => {
     const beforeMidnight = local(2026, 11, 2, 23, 59);
     const afterMidnight = local(2026, 11, 3, 0, 0);
     expect(nightKey(beforeMidnight)).not.toBe(nightKey(afterMidnight));
+  });
+});
+
+describe("previousNightKey", () => {
+  it("returns the prior calendar date, across month and year boundaries", () => {
+    expect(previousNightKey(local(2026, 11, 3, 7, 0))).toBe("2026-11-02");
+    expect(previousNightKey(local(2026, 11, 1, 0, 1))).toBe("2026-10-31");
+    expect(previousNightKey(local(2027, 1, 1, 0, 1))).toBe("2026-12-31");
   });
 });
 
@@ -105,5 +113,25 @@ describe("GuestbookTally", () => {
 
   it("exposes the hour constant used to convert milliseconds", () => {
     expect(HOUR_MS).toBe(3_600_000);
+  });
+
+  it("prunes finalized past nights but keeps the current night and open episodes", () => {
+    const tally = new GuestbookTally();
+    tally.asleep("a", local(2026, 11, 1, 22, 0));
+    tally.awake("a", local(2026, 11, 1, 23, 0)); // closed, past night
+    tally.asleep("b", local(2026, 11, 2, 23, 0)); // open episode, spans into 11-03
+    tally.asleep("c", local(2026, 11, 3, 1, 0)); // current night
+
+    expect(tally.nightsWithData()).toEqual(["2026-11-01", "2026-11-02", "2026-11-03"]);
+    tally.pruneFinalized("2026-11-03");
+    expect(tally.nightsWithData()).toEqual(["2026-11-02", "2026-11-03"]);
+  });
+
+  it("keeps a past night whose sleep is still open after the prune", () => {
+    const tally = new GuestbookTally();
+    tally.asleep("a", local(2026, 11, 2, 23, 0)); // still asleep after midnight
+    tally.pruneFinalized("2026-11-03");
+    expect(tally.nightsWithData()).toEqual(["2026-11-02"]);
+    expect(tally.hasOpenEpisodes()).toBe(true);
   });
 });

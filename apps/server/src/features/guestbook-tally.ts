@@ -16,7 +16,21 @@ export interface NightTally {
  * `2026-11-02`.
  */
 export function nightKey(at: number): string {
+  return formatLocalDate(new Date(at));
+}
+
+/**
+ * The key of the night before the one containing `at` — "last night". Uses
+ * calendar arithmetic so it survives month/year boundaries and DST, unlike a
+ * fixed 24-hour subtraction.
+ */
+export function previousNightKey(at: number): string {
   const d = new Date(at);
+  d.setDate(d.getDate() - 1);
+  return formatLocalDate(d);
+}
+
+function formatLocalDate(d: Date): string {
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${month}-${day}`;
@@ -96,11 +110,28 @@ export class GuestbookTally {
     return this.open.size > 0;
   }
 
+  /**
+   * Drop nights strictly before `before` that have no open episode. Such a night
+   * is final (no new sleeper can fall asleep in the past, and no episode is still
+   * accruing), so once it has been flushed its in-memory ids and hours are no
+   * longer needed. Call this only after a successful flush.
+   */
+  pruneFinalized(before: string): void {
+    for (const night of [...this.nights.keys()]) {
+      if (night < before && !this.hasOpenEpisode(night)) this.nights.delete(night);
+    }
+  }
+
   private close(id: string, at: number): void {
     const episode = this.open.get(id);
     if (!episode) return;
     this.acc(episode.night).closedHours += Math.max(0, at - episode.start) / HOUR_MS;
     this.open.delete(id);
+  }
+
+  private hasOpenEpisode(night: string): boolean {
+    for (const episode of this.open.values()) if (episode.night === night) return true;
+    return false;
   }
 
   private acc(night: string): NightAcc {

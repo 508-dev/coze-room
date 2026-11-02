@@ -2,7 +2,7 @@ import type { GuestbookEntry } from "@dormouse/protocol";
 import type { Room } from "../room";
 import type { RoomFeature } from "./feature";
 import { type GuestbookStore, getDefaultGuestbookStore } from "./guestbook-store";
-import { GuestbookTally, nightKey } from "./guestbook-tally";
+import { GuestbookTally, nightKey, previousNightKey } from "./guestbook-tally";
 
 /** How many recent nights to keep in the welcome snapshot and the table list. */
 const RECENT_NIGHTS = 7;
@@ -14,17 +14,21 @@ const FLUSH_INTERVAL_MS = 30_000;
  *
  * All database I/O is fire-and-forget and error-handled; no room hook blocks
  * on it. The tally is kept in memory and flushed to Postgres (or a memory
- * fallback) on change and on a timer. The welcome hook serves the last few
- * *completed* nights from a cached list, so it stays synchronous.
+ * fallback) on change and on a timer, then finalized nights are pruned from
+ * memory. Because the welcome hook is synchronous it serves whatever is cached
+ * so far; once the store finishes loading (or a night rolls over) a `guestbook`
+ * push carries the freshest snapshot to anyone already connected.
  */
 export function createGuestbookFeature(
   store: GuestbookStore = getDefaultGuestbookStore(),
   now: () => number = () => Date.now(),
 ): RoomFeature {
   const tally = new GuestbookTally();
-  let entries: GuestbookEntry[] = [];
   const lastAsleep = new Map<string, boolean>();
+  let entries: GuestbookEntry[] = [];
+  let lastNight = "";
   let roomId: string | null = null;
+  let roomRef: Room | null = null;
   let currentNight = "";
   let lastFlushAt = -Infinity;
   let dirty = false;
@@ -39,9 +43,19 @@ export function createGuestbookFeature(
     console.warn(`guestbook: ${context}`, error);
   }
 
+  /** Adopt a fresher snapshot and tell anyone already connected. */
+  function pushIfChanged(next: GuestbookEntry[], nextLastNight: string): void {
+    const changed = nextLastNight !== lastNight || JSON.stringify(next) !== JSON.stringify(entries);
+    if (!changed) return;
+    entries = next;
+    lastNight = nextLastNight;
+    roomRef?.broadcast({ t: "guestbook", guestbook: entries, lastNight });
+  }
+
   function start(room: Room): void {
     if (roomId !== null) return;
     roomId = room.spec.id;
+    roomRef = room;
     currentNight = nightKey(now());
     ready = (async () => {
       const id = roomId;
@@ -51,7 +65,10 @@ export function createGuestbookFeature(
       const key = nightKey(now());
       const current = nights.find((n) => n.date === key);
       if (current) tally.seed(key, current);
-      entries = nights.filter((n) => n.date < key);
+      pushIfChanged(
+        nights.filter((n) => n.date < key),
+        previousNightKey(now()),
+      );
     })().catch((error) => warn(error, "failed to load recent nights"));
   }
 
@@ -60,7 +77,10 @@ export function createGuestbookFeature(
     if (id === null) return;
     const key = nightKey(now());
     const nights = await store.list(id, RECENT_NIGHTS);
-    entries = nights.filter((n) => n.date < key);
+    pushIfChanged(
+      nights.filter((n) => n.date < key),
+      previousNightKey(now()),
+    );
   }
 
   async function flush(at: number): Promise<void> {
@@ -72,6 +92,8 @@ export function createGuestbookFeature(
         await store.save(id, night, tally.tally(night, at));
       }
       await refreshEntries();
+      // Only after every night was saved: finalized nights can leave memory.
+      tally.pruneFinalized(nightKey(at));
     } catch (error) {
       warn(error, "flush failed");
     }
@@ -130,7 +152,7 @@ export function createGuestbookFeature(
     },
     welcome(room) {
       start(room);
-      return { guestbook: entries };
+      return { guestbook: entries, lastNight };
     },
   };
 }

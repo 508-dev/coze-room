@@ -1,10 +1,12 @@
 import type { GuestbookEntry } from "@dormouse/protocol";
 import type { ClientFeature } from "./feature";
-import { companionsAtWake } from "./guestbook-logic";
+import { companionsAtWake, lastNightSleepers } from "./guestbook-logic";
 
 /** Feature-owned reactive state stays out of the shared room-state module. */
 export class GuestbookFeature {
   entries = $state<GuestbookEntry[]>([]);
+  /** The server's "last night" key, used to pick the headline count by date. */
+  lastNight = $state("");
   /** Whether the recent-nights detail panel is open. */
   open = $state(false);
   /** Display names shown when the local avatar wakes; bumped to retrigger the fade. */
@@ -12,10 +14,19 @@ export class GuestbookFeature {
   wakeSequence = $state(0);
 
   register: ClientFeature = (state, connection) => {
-    const offWelcome = connection.on("welcome", ({ guestbook }) => {
+    const apply = (guestbook: GuestbookEntry[], lastNight: string) => {
       this.entries = guestbook;
-      state.events.emit("guestbookUpdate", { sleepers: guestbook[0]?.sleepers ?? null });
-    });
+      this.lastNight = lastNight;
+      state.events.emit("guestbookUpdate", { sleepers: lastNightSleepers(guestbook, lastNight) });
+    };
+    const offWelcome = connection.on("welcome", ({ guestbook, lastNight }) =>
+      apply(guestbook, lastNight),
+    );
+    // The server pushes this once loading completes, so the first arrival
+    // (whose synchronous welcome predates the async store load) still gets it.
+    const offGuestbook = connection.on("guestbook", ({ guestbook, lastNight }) =>
+      apply(guestbook, lastNight),
+    );
     const offDozed = connection.on("dozed", ({ id, asleep }) => {
       if (id === state.selfId && !asleep) {
         this.wakeNames = companionsAtWake(state.occupants, state.selfId ?? "");
@@ -27,10 +38,13 @@ export class GuestbookFeature {
     });
     // The scene layer may attach after the welcome already arrived; answer it.
     const offRequest = state.events.on("guestbookRequest", () => {
-      state.events.emit("guestbookUpdate", { sleepers: this.entries[0]?.sleepers ?? null });
+      state.events.emit("guestbookUpdate", {
+        sleepers: lastNightSleepers(this.entries, this.lastNight),
+      });
     });
     return () => {
       offWelcome();
+      offGuestbook();
       offDozed();
       offClick();
       offRequest();

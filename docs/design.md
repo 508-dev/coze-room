@@ -182,21 +182,29 @@ empty room — the difference between a room reading as *abandoned* and reading 
   one is double-counted and no sleep is split across two nights.
 - **Distinct sleepers** means distinct occupants who fell asleep that night, one
   per night no matter how many times they doze off and wake. Occupant ids are
-  server-assigned per connection, so "distinct" is per process lifetime; a
-  mid-night restart cannot double-count within a session, and a night's
-  pre-restart tally is folded back in at boot. No names or ids are ever stored.
+  server-assigned per connection, so a reconnect (or a restart) hands the same
+  human a *new* id: "distinct" is per process lifetime, and a restart can count
+  a reconnecting human twice across the boundary. Stable identity is a planned
+  follow-up (accounts, [#38](https://github.com/508-dev/coze-room/issues/38)-era);
+  for v0.1 the count is approximate in exactly that one edge case. A night's
+  pre-restart tally is folded back in at boot so the number itself survives. No
+  names or ids are ever stored.
 - **Sleeper-hours** are fractional hours summed per night — closed episodes plus
   the partial hours of anyone still asleep at flush time.
 - **Persistence** is one Postgres table, `guestbook_tally (room_id, night,
   sleepers, sleeper_hours)`, via Bun's built-in SQL client — no new dependency.
   A tiny idempotent migration runs at startup. If `DATABASE_URL` is unset or the
-  database is unreachable, the guestbook logs once and runs in memory: the room
-  never fails to start because of it.
+  database is unreachable at boot, the guestbook logs once and runs in memory:
+  the room never fails to start because of it. The memory fallback is a boot-time
+  choice and is bounded to the last 14 nights per room; a database that drops
+  *mid-run* simply drops those writes (the tally keeps accruing in memory and
+  flush failures are logged once), rather than crashing or blocking the room.
 - **The in-scene object** is a chalkboard on the wall carrying "N slept here
   last night" in small pixel text, positioned from the pack section
-  `sections.guestbook.spot` (room-space pixels) and falling back to a sensible
-  spot in the 640×360 placeholder. Clicking it opens a panel listing the last
-  few nights.
+  `sections.guestbook.spot` (the board's centre, in room-space pixels — the pack
+  contract from PR #72) and falling back to a sensible wall spot in the 640×360
+  placeholder. Clicking it opens a panel listing the last few nights. The label
+  is placeholder Pixi text until a bitmap font lands after #73.
 - **The wake summary** is a quiet, fading line naming (at most a few) occupants
   still asleep when you wake — the only social payoff the product can honestly
   offer.

@@ -1,4 +1,4 @@
-import type { Occupant } from "@dormouse/protocol";
+import type { GuestbookEntry, Occupant } from "@dormouse/protocol";
 
 /**
  * Display names of the occupants still asleep when `selfId` wakes, excluding
@@ -18,4 +18,15 @@ export function joinNames(names: string[]): string {
   if (names.length === 1) return names[0] ?? "";
   if (names.length === 2) return `${names[0]} and ${names[1]}`;
   return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+}
+
+/**
+ * The sleeper count for the server's "last night", looked up by calendar date
+ * rather than array position. Returns `null` before any snapshot has arrived
+ * (`lastNight` is empty), and `0` when last night had no sleepers — never an
+ * older night's count.
+ */
+export function lastNightSleepers(entries: GuestbookEntry[], lastNight: string): number | null {
+  if (!lastNight) return null;
+  return entries.find((entry) => entry.date === lastNight)?.sleepers ?? 0;
 }

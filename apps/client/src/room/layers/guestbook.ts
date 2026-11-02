@@ -25,14 +25,18 @@ declare module "../packs/manifest" {
 }
 
 /** A sensible wall spot in the 640x360 placeholder, when no pack sets one. */
-const DEFAULT_SPOT: [number, number] = [48, 48];
+const DEFAULT_SPOT: [number, number] = [124, 76];
 const BOARD_WIDTH = 152;
 const BOARD_HEIGHT = 54;
 const FRAME_COLOUR = 0x4a3626;
 const BOARD_COLOUR = 0x1f2a1a;
 const CHALK_COLOUR = 0xe8e2d0;
 
-/** Resolve a valid board position from the pack section, else the default. */
+/**
+ * Resolve a valid board centre from the pack section, else the default. The
+ * pack contract (PR #72) writes `sections.guestbook.spot` as the rect centre,
+ * in room-space pixels.
+ */
 export function guestbookSpot(pack: LoadedPack | null): [number, number] {
   const [width, height] = pack?.manifest.room.size ?? PLACEHOLDER_SIZE;
   const spot = pack?.manifest.sections?.guestbook?.spot;
@@ -67,22 +71,28 @@ export function createGuestbookLayer(): SceneLayer {
 
   function label(): string {
     if (sleepers === null) return "no one yet";
+    if (sleepers === 0) return "no one slept here last night";
     return `${sleepers} slept here last night`;
   }
 
   function draw(): void {
     for (const child of root.removeChildren()) child.destroy();
-    const [x, y] = spot;
-    const frame = new Graphics().roundRect(x, y, BOARD_WIDTH, BOARD_HEIGHT, 4).fill(FRAME_COLOUR);
+    // `spot` is the board's centre; derive its top-left.
+    const [cx, cy] = spot;
+    const x = cx - BOARD_WIDTH / 2;
+    const y = cy - BOARD_HEIGHT / 2;
+    const frame = new Graphics().roundRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT, 4).fill(FRAME_COLOUR);
+    frame.position.set(x, y);
     const board = new Graphics()
-      .roundRect(x + 3, y + 3, BOARD_WIDTH - 6, BOARD_HEIGHT - 6, 2)
+      .roundRect(3, 3, BOARD_WIDTH - 6, BOARD_HEIGHT - 6, 2)
       .fill(BOARD_COLOUR);
+    board.position.set(x, y);
     const text = new Text({
       text: label(),
       style: { fontSize: 10, fontFamily: "monospace", fill: CHALK_COLOUR, align: "center" },
     });
     text.anchor.set(0.5);
-    text.position.set(x + BOARD_WIDTH / 2, y + BOARD_HEIGHT / 2);
+    text.position.set(cx, cy);
     root.addChild(frame, board, text);
   }
 

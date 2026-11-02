@@ -3,6 +3,8 @@ export interface SceneEvents {
   seatClick: { seatId: string };
   /** Emitted by the Scene whenever the room transform changes (resize/room load). */
   roomTransform: RoomTransform;
+  /** Per-seat head anchors in room coordinates, or null when using placeholder art. */
+  heads: Record<string, { x: number; y: number }> | null;
 }
 
 export interface RoomTransform {

@@ -95,3 +95,23 @@ export async function loadOccupantTextures(
     ),
   );
 }
+
+/** Head anchor (top-centre) per seat, in room coordinates. */
+export type SeatHeads = Record<string, { x: number; y: number }>;
+
+/**
+ * Derive each seat's head anchor from the occupant sprites. `headBox` is the
+ * same across looks/states for a seat, so the first matching sprite suffices.
+ * The y is the top of the head box — the same point the avatars layer draws the
+ * sleep `z` above.
+ */
+export function headCenters(section: OccupantsSection): SeatHeads {
+  const heads: SeatHeads = {};
+  for (const seatId of Object.keys(section.seats)) {
+    const sprite = Object.values(section.sprites).find((s) => s.seat === seatId);
+    if (!sprite) continue;
+    const [x, y, w] = sprite.headBox;
+    heads[seatId] = { x: x + w / 2, y };
+  }
+  return heads;
+}

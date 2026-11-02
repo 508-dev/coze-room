@@ -23,12 +23,19 @@ export const ANNOUNCE_THROTTLE_MS = 2_500;
 const HEAD_RADIUS = 9; // room px, matches the avatars layer
 const STANDING = { bodyX: 60, bodyY: 380 }; // room px, matches the avatars layer
 
-/** Speaker's head top-centre in room coordinates, or null if unknown. */
+/** Speaker's head anchor in room coordinates, or null if unknown. */
 export function avatarHead(
   occupant: Occupant | undefined,
   room: RoomSpec | null,
+  heads: Record<string, { x: number; y: number }> | null,
 ): { x: number; y: number } | null {
   if (!occupant || !room) return null;
+  // The real pack anchors avatars from per-sprite headBox; prefer that exact
+  // head when present, falling back to the placeholder seat geometry.
+  if (occupant.seatId) {
+    const head = heads?.[occupant.seatId];
+    if (head) return head;
+  }
   const seat = occupant.seatId ? room.seats.find((s) => s.id === occupant.seatId) : undefined;
   const spot = seat ? seatGeometry(seat) : STANDING;
   return { x: spot.bodyX, y: spot.bodyY - HEAD_RADIUS };

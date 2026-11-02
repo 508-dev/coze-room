@@ -32,6 +32,7 @@ interface Bubble {
 }
 
 let transform = $state<RoomTransform | null>(null);
+let heads = $state<Record<string, { x: number; y: number }> | null>(null);
 let bubbles = $state<Bubble[]>([]);
 let liveText = $state("");
 let lastAnnouncedAt: number | null = null;
@@ -45,6 +46,7 @@ function show(id: string, text: string): void {
   const head = avatarHead(
     roomState.occupants.find((o) => o.id === id),
     roomState.room,
+    heads,
   );
   if (!head) return;
   const screen = toScreen(head, transform);
@@ -111,6 +113,9 @@ onMount(() => {
   off = [
     roomState.events.on("roomTransform", (value) => {
       transform = value;
+    }),
+    roomState.events.on("heads", (value) => {
+      heads = value;
     }),
     roomState.events.on("phrase", ({ id, text }) => show(id, text)),
   ];

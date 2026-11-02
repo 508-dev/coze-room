@@ -1,6 +1,5 @@
-import type { Occupant } from "@dormouse/protocol";
+import type { Occupant, RoomSpec } from "@dormouse/protocol";
 import { describe, expect, it } from "vitest";
-import { PUBLIC_ROOMS } from "../../../server/src/rooms";
 import {
   ANNOUNCE_THROTTLE_MS,
   avatarHead,
@@ -19,8 +18,19 @@ import {
 } from "./bubbles";
 import { enPhrases } from "./phrases/locale/en";
 
-const room = PUBLIC_ROOMS[0];
-if (!room) throw new Error("no public room");
+// The placeholder room uses top-left seat coordinates, which is what the
+// `seatGeometry` fallback is written for.
+const room: RoomSpec = {
+  id: "test",
+  name: "Test",
+  capacity: 12,
+  seats: [
+    { id: "couch-l", kind: "couch", pose: "sit", x: 180, y: 300, depth: 2 },
+    { id: "couch-r", kind: "couch", pose: "sit", x: 250, y: 300, depth: 2 },
+    { id: "beanbag", kind: "beanbag", pose: "sit", x: 380, y: 340, depth: 3 },
+    { id: "hammock", kind: "hammock", pose: "lie", x: 480, y: 250, depth: 1 },
+  ],
+};
 
 const occupant: Occupant = {
   id: "a",
@@ -51,10 +61,20 @@ describe("bubble lifetime", () => {
 describe("bubble positioning", () => {
   it("finds the seated and standing head positions in room space", () => {
     // Hammock body centre is (524, 238); head sits 9px above it.
-    expect(avatarHead(occupant, room)).toEqual({ x: 524, y: 229 });
+    expect(avatarHead(occupant, room, null)).toEqual({ x: 524, y: 229 });
     // A standing occupant defaults to the shared standing spot.
-    expect(avatarHead({ ...occupant, seatId: null }, room)).toEqual({ x: 60, y: 371 });
-    expect(avatarHead(undefined, room)).toBeNull();
+    expect(avatarHead({ ...occupant, seatId: null }, room, null)).toEqual({ x: 60, y: 371 });
+    expect(avatarHead(undefined, room, null)).toBeNull();
+  });
+
+  it("prefers the pack headBox anchor when heads are present", () => {
+    const heads = { hammock: { x: 108, y: 30 } };
+    expect(avatarHead(occupant, room, heads)).toEqual({ x: 108, y: 30 });
+    // A seat without a head falls back to the placeholder geometry.
+    expect(avatarHead({ ...occupant, seatId: "beanbag" }, room, heads)).toEqual({
+      x: 404,
+      y: 319,
+    });
   });
 
   it("maps a room point to screen space through the transform", () => {

@@ -1,5 +1,6 @@
 import type { Occupant, RoomSpec } from "@dormouse/protocol";
 import { Application, Container, type PointData, type Ticker } from "pixi.js";
+import { headCenters, occupantsSection } from "./art/occupants";
 import type { RoomEvents } from "./events";
 import { SCENE_SLOTS, type SceneLayer } from "./layers/layer";
 import { sceneLayers } from "./layers/registry";
@@ -89,6 +90,19 @@ export class Scene {
     if (!this.room) return;
     this.resize();
     for (const layer of this.layers) layer.onRoomChange?.(this.room, this.pack);
+    this.emitHeads();
+  }
+
+  private emitHeads(): void {
+    if (!this.pack) {
+      this.events?.emit("heads", null);
+      return;
+    }
+    const section = occupantsSection(
+      this.pack.manifest.sections?.occupants,
+      this.pack.manifest.room.size,
+    );
+    this.events?.emit("heads", section ? headCenters(section) : null);
   }
 
   syncOccupants(occupants: Occupant[], selfId: string): void {

@@ -1,5 +1,6 @@
 import { GuestbookFeature } from "./guestbook.svelte";
 import { MediaFeature } from "./media.svelte";
+import { PhrasesFeature } from "./phrases.svelte";
 import { registerPresence } from "./presence";
 import { registerSeating } from "./seating";
 
@@ -10,5 +11,6 @@ export function createClientFeatures() {
     seating: { register: registerSeating },
     guestbook: new GuestbookFeature(),
     media: new MediaFeature(),
+    phrases: new PhrasesFeature(),
   };
 }

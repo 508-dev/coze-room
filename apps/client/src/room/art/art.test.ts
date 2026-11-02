@@ -7,7 +7,7 @@ import { createSeatsLayer } from "../layers/seats";
 import type { LoadedPack } from "../packs/loader";
 import { validateManifest } from "../packs/manifest";
 import { glassRects, inGlass } from "./environment";
-import { occupantsSection } from "./occupants";
+import { headCenters, occupantsSection } from "./occupants";
 
 const pack: LoadedPack = {
   manifest: validateManifest(manifest),
@@ -43,6 +43,17 @@ describe("pack art contract", () => {
         [128, 72],
       ),
     ).toBeNull();
+  });
+
+  it("derives each seat's head top-centre from the occupant sprites", () => {
+    const section = occupantsSection(manifest.sections.occupants, [128, 72]);
+    if (!section) throw new Error("invalid occupants section");
+    expect(headCenters(section)).toEqual({
+      "couch-l": { x: 42, y: 32 },
+      "couch-r": { x: 65, y: 33 },
+      beanbag: { x: 18, y: 39 },
+      hammock: { x: 91.5, y: 40 },
+    });
   });
 
   it("keeps every rain cell in actual glass rectangles", () => {

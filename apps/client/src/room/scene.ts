@@ -1,5 +1,6 @@
 import type { Occupant, RoomSpec } from "@dormouse/protocol";
 import { Application, Container, type PointData, type Ticker } from "pixi.js";
+import { headCenters, occupantsSection } from "./art/occupants";
 import type { RoomEvents } from "./events";
 import { SCENE_SLOTS, type SceneLayer } from "./layers/layer";
 import { sceneLayers } from "./layers/registry";
@@ -24,8 +25,10 @@ export class Scene {
   private generation = 0;
   private observer: ResizeObserver | null = null;
   private host: HTMLElement | null = null;
+  private events: RoomEvents | null = null;
 
   async init(host: HTMLElement, events: RoomEvents, options: SceneInitOptions = {}): Promise<void> {
+    this.events = events;
     await this.app.init({
       background: 0x0d0b14,
       resizeTo: host,
@@ -59,6 +62,7 @@ export class Scene {
     const transform = roomTransform(width, height, this.size);
     this.root.scale.set(transform.scale);
     this.root.position.set(transform.x, transform.y);
+    this.events?.emit("roomTransform", { ...transform, width, height });
   }
 
   toRoomPoint(global: PointData): PointData {
@@ -86,6 +90,19 @@ export class Scene {
     if (!this.room) return;
     this.resize();
     for (const layer of this.layers) layer.onRoomChange?.(this.room, this.pack);
+    this.emitHeads();
+  }
+
+  private emitHeads(): void {
+    if (!this.pack) {
+      this.events?.emit("heads", null);
+      return;
+    }
+    const section = occupantsSection(
+      this.pack.manifest.sections?.occupants,
+      this.pack.manifest.room.size,
+    );
+    this.events?.emit("heads", section ? headCenters(section) : null);
   }
 
   syncOccupants(occupants: Occupant[], selfId: string): void {
@@ -114,6 +131,7 @@ export class Scene {
     for (const layer of this.layers) layer.destroy();
     this.layers = [];
     this.host = null;
+    this.events = null;
     this.app.destroy(true, { children: true });
   }
 }

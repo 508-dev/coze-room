@@ -1,6 +1,7 @@
 import { type ClientMessage, decode } from "@dormouse/protocol";
 import type { RoomSocket } from "./room";
 import { RoomRegistry } from "./room-registry";
+import { serveStatic } from "./static";
 
 const PORT = Number(process.env.API_PORT ?? 8820);
 const TICK_MS = 15_000;
@@ -38,7 +39,7 @@ const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
       return upgraded ? undefined : new Response("expected a websocket", { status: 426 });
     }
 
-    return new Response("not found", { status: 404 });
+    return serveStatic(url.pathname);
   },
 
   websocket: {

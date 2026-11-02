@@ -24,7 +24,7 @@ htmlcov
 
 dist
 build
-apps/web/dist
+apps/client/dist
 
 .DS_Store
 *.log

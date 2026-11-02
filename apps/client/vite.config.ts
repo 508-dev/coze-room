@@ -1,8 +1,11 @@
+import { fileURLToPath } from "node:url";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
+import { packAssets } from "./pack-assets";
 
 export default defineConfig({
-  plugins: [svelte()],
+  envDir: fileURLToPath(new URL("../..", import.meta.url)),
+  plugins: [svelte(), packAssets(fileURLToPath(new URL("../../packs", import.meta.url)))],
   server: {
     // Bind the same IPv4 loopback the port helper and .env.example advertise.
     // Vite's default resolves "localhost" to [::1] on some Linux setups, which

@@ -1,112 +1,107 @@
-import type { Occupant, RoomSpec, Seat } from "@dormouse/protocol";
-import { Application, Container, Graphics } from "pixi.js";
+import type { Occupant, RoomSpec } from "@dormouse/protocol";
+import { Application, Container, type PointData, type Ticker } from "pixi.js";
+import type { RoomEvents } from "./events";
+import { SCENE_SLOTS, type SceneLayer } from "./layers/layer";
+import { sceneLayers } from "./layers/registry";
+import { type LoadedPack, loadPack } from "./packs/loader";
+import { PLACEHOLDER_SIZE, roomTransform } from "./space";
 
-/**
- * Placeholder rendering.
- *
- * Everything here is flat colour. The real room is pixel art composited from
- * versioned packs, and the point of this file is to prove the loop -- a room
- * you can see, seats you can click, bodies that appear where they should --
- * without blocking on art.
- */
-
-const SEAT_COLOUR: Record<Seat["kind"], number> = {
-  couch: 0x4a3b63,
-  beanbag: 0x6b4f3a,
-  hammock: 0x3a5563,
-};
-
-/** Frame rate once the user has stopped interacting. See driftOff(). */
 const DRIFT_FPS = 5;
 
-export interface SceneCallbacks {
-  onSeatClick(seatId: string): void;
-}
-
+/** Pixi lifecycle, logical room transform, clock and feature-layer orchestration. */
 export class Scene {
   readonly app = new Application();
-  private seatLayer = new Container();
-  private bodyLayer = new Container();
-  private bodies = new Map<string, Graphics>();
-  private seatPositions = new Map<string, { x: number; y: number }>();
+  private root = new Container();
+  private layers: SceneLayer[] = [];
+  private size = PLACEHOLDER_SIZE;
+  private room: RoomSpec | null = null;
+  private pack: LoadedPack | null = null;
+  private generation = 0;
+  private observer: ResizeObserver | null = null;
+  private host: HTMLElement | null = null;
 
-  async init(host: HTMLElement, callbacks: SceneCallbacks): Promise<void> {
+  async init(host: HTMLElement, events: RoomEvents): Promise<void> {
     await this.app.init({
-      background: 0x140f1e,
+      background: 0x0d0b14,
       resizeTo: host,
+      preference: "webgl",
       antialias: false,
-      // Pixel art is sampled nearest-neighbour; smoothing would defeat it.
       roundPixels: true,
       autoDensity: true,
     });
+    this.host = host;
     host.appendChild(this.app.canvas);
-    this.app.stage.addChild(this.seatLayer, this.bodyLayer);
-    this.callbacks = callbacks;
+    this.app.stage.addChild(this.root);
+    const slots = new Map(SCENE_SLOTS.map((name) => [name, this.root.addChild(new Container())]));
+    this.layers = sceneLayers.map((create) => create());
+    for (const layer of this.layers) {
+      const container = slots.get(layer.slot);
+      if (!container) throw new Error(`unknown scene slot: ${layer.slot}`);
+      layer.attach({ container, events, toRoomPoint: (point) => this.toRoomPoint(point) });
+    }
+    this.observer = new ResizeObserver(() => this.resize());
+    this.observer.observe(host);
+    this.resize();
+    this.app.ticker.add(this.update);
   }
 
-  private callbacks: SceneCallbacks = { onSeatClick: () => {} };
+  private resize(): void {
+    if (!this.host) return;
+    const { clientWidth: width, clientHeight: height } = this.host;
+    this.app.renderer.resize(width, height);
+    const transform = roomTransform(width, height, this.size);
+    this.root.scale.set(transform.scale);
+    this.root.position.set(transform.x, transform.y);
+  }
+
+  toRoomPoint(global: PointData): PointData {
+    return this.root.toLocal(global);
+  }
 
   drawRoom(room: RoomSpec): void {
-    this.seatLayer.removeChildren();
-    this.seatPositions.clear();
+    this.room = room;
+    this.pack = null;
+    this.size = PLACEHOLDER_SIZE;
+    const generation = ++this.generation;
+    this.notifyRoom();
+    // Absence of a selected pack is intentional, not a loading error.
+    if (!room.packId) return;
+    void loadPack(room.packId).then((pack) => {
+      // A previous room's late load must not replace the active room (or a destroyed app).
+      if (generation !== this.generation) return;
+      this.pack = pack;
+      this.size = pack?.manifest.room.size ?? PLACEHOLDER_SIZE;
+      this.notifyRoom();
+    });
+  }
 
-    for (const seat of room.seats) {
-      const width = seat.kind === "couch" ? 64 : seat.kind === "hammock" ? 88 : 48;
-      const height = seat.pose === "lie" ? 24 : 40;
-
-      const g = new Graphics().roundRect(0, 0, width, height, 6).fill(SEAT_COLOUR[seat.kind]);
-      g.position.set(seat.x, seat.y);
-      g.zIndex = seat.depth;
-      g.eventMode = "static";
-      g.cursor = "pointer";
-      g.on("pointertap", () => this.callbacks.onSeatClick(seat.id));
-
-      this.seatLayer.addChild(g);
-      this.seatPositions.set(seat.id, { x: seat.x + width / 2, y: seat.y - 12 });
-    }
-    this.seatLayer.sortableChildren = true;
+  private notifyRoom(): void {
+    if (!this.room) return;
+    this.resize();
+    for (const layer of this.layers) layer.onRoomChange?.(this.room, this.pack);
   }
 
   syncOccupants(occupants: Occupant[], selfId: string): void {
-    const seen = new Set<string>();
-
-    for (const occupant of occupants) {
-      seen.add(occupant.id);
-      let body = this.bodies.get(occupant.id);
-      if (!body) {
-        body = new Graphics();
-        this.bodies.set(occupant.id, body);
-        this.bodyLayer.addChild(body);
-      }
-
-      // Self is brighter; sleepers are dimmed. Stand-ins for real sprites.
-      const tint = occupant.id === selfId ? 0xf0e6ff : 0xa89cc0;
-      body
-        .clear()
-        .circle(0, 0, 9)
-        .fill({ color: tint, alpha: occupant.asleep ? 0.45 : 1 });
-
-      const spot = occupant.seatId ? this.seatPositions.get(occupant.seatId) : undefined;
-      body.position.set(spot?.x ?? 60, spot?.y ?? 380);
-    }
-
-    for (const [id, body] of this.bodies) {
-      if (seen.has(id)) continue;
-      body.destroy();
-      this.bodies.delete(id);
-    }
+    for (const layer of this.layers) layer.onOccupantsChange?.(occupants, selfId);
   }
 
-  /**
-   * Throttle hard rather than stopping. The room keeps breathing at a frame
-   * rate nobody awake would accept, which is the point: audio and presence
-   * continue while the GPU goes quiet.
-   */
+  private update = (ticker: Ticker): void => {
+    const now = performance.now();
+    for (const layer of this.layers) layer.update?.(ticker.elapsedMS / 1000, now);
+  };
+
+  /** Audio, presence and DOM remain live while the renderer throttles hard. */
   driftOff(active: boolean): void {
     this.app.ticker.maxFPS = active ? DRIFT_FPS : 0;
   }
 
   destroy(): void {
+    ++this.generation;
+    this.observer?.disconnect();
+    this.app.ticker.remove(this.update);
+    for (const layer of this.layers) layer.destroy();
+    this.layers = [];
+    this.host = null;
     this.app.destroy(true, { children: true });
   }
 }

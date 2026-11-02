@@ -7,7 +7,7 @@
       "**",
       "!**/.claude",
       "!**/assets",
-      "!**/packs",
+      "!packs",
       "!**/catalogue/media",
       "!**/*.glsl",
       "!tools/android-release",
@@ -64,6 +64,7 @@
       "linter": {
         "rules": {
           "correctness": {
+            "noUnusedImports": "off",
             "noUnusedVariables": "off"
           }
         }

@@ -16,6 +16,7 @@ export class Connection {
   private handlers = new Set<Handler>();
   private retry = 0;
   private closed = false;
+  private retryTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private readonly roomId: string,
@@ -23,6 +24,7 @@ export class Connection {
   ) {}
 
   connect(): void {
+    if (this.closed) return;
     const url = new URL("/ws", API_BASE);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
     url.searchParams.set("room", this.roomId);
@@ -44,13 +46,19 @@ export class Connection {
       if (this.closed) return;
       // Backoff caps at 10s. There is no hurry; nobody is watching.
       const delay = Math.min(10_000, 500 * 2 ** this.retry++);
-      setTimeout(() => this.connect(), delay);
+      this.retryTimer = setTimeout(() => this.connect(), delay);
     });
   }
 
-  on(handler: Handler): () => void {
-    this.handlers.add(handler);
-    return () => this.handlers.delete(handler);
+  on<T extends ServerMessage["t"]>(
+    type: T,
+    handler: (message: Extract<ServerMessage, { t: T }>) => void,
+  ): () => void {
+    const wrapped: Handler = (message) => {
+      if (message.t === type) handler(message as Extract<ServerMessage, { t: T }>);
+    };
+    this.handlers.add(wrapped);
+    return () => this.handlers.delete(wrapped);
   }
 
   send(message: ClientMessage): void {
@@ -59,6 +67,8 @@ export class Connection {
 
   dispose(): void {
     this.closed = true;
+    clearTimeout(this.retryTimer);
+    this.handlers.clear();
     this.socket?.close();
   }
 }

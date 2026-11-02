@@ -109,6 +109,10 @@ The loader validates the core manifest and loads its textures via Pixi `Assets`,
 with nearest-neighbour sampling. Missing/invalid manifests or required textures
 warn and retain placeholder rendering, never clear the screen. The environment
 layer renders the first view until `environmentChanged: { id }` is received.
+It subscribes first, then emits `environmentRequested: {}` once on attach;
+the environment feature responds with its current id. This handshake covers a
+welcome arriving before asynchronous Pixi initialisation without retaining state
+in the event bus. Without an environment feature the first view remains safe.
 
 **Adding a manifest section:** declare its type in the owning feature's module:
 

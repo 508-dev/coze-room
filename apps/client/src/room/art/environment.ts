@@ -12,6 +12,7 @@ declare module "../packs/manifest" {
 declare module "../events" {
   interface SceneEvents {
     environmentChanged: { id: string };
+    environmentRequested: Record<string, never>;
   }
 }
 

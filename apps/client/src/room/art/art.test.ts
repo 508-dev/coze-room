@@ -91,4 +91,20 @@ describe("pack art contract", () => {
     layer.destroy();
     container.destroy({ children: true });
   });
+
+  it("requests the current shared environment when attaching after welcome", () => {
+    const container = new Container();
+    const events = new RoomEvents();
+    // The feature already processed a clear-night welcome before Pixi was ready.
+    const respond = vi.fn(() => events.emit("environmentChanged", { id: "clear-night" }));
+    events.on("environmentRequested", respond);
+    const layer = createEnvironmentLayer();
+    layer.attach({ container, events, toRoomPoint: (p) => p });
+    expect(respond).toHaveBeenCalledOnce();
+    layer.onRoomChange?.(room, pack);
+    const views = container.children[0] as Container;
+    expect(views.children[0]).toMatchObject({ texture: Texture.WHITE });
+    layer.destroy();
+    container.destroy({ children: true });
+  });
 });

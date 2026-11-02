@@ -37,6 +37,9 @@ export function createEnvironmentLayer(): SceneLayer {
         environment = id;
         select();
       });
+      // Welcome may have arrived before asynchronous Pixi init. Ask the feature
+      // for its current choice after subscribing; no publisher means the first view.
+      events.emit("environmentRequested", {});
       offMotion = observeReducedMotion((value) => {
         reduced = value;
         frame = -1;

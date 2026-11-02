@@ -1,5 +1,5 @@
 /** Composable wire contract. Feature messages live beside this registry. */
-export type { GuestbookEntry, GuestbookWelcome } from "./guestbook";
+export type { GuestbookEntry, GuestbookServerMessage, GuestbookWelcome } from "./guestbook";
 export type { MediaItem, MediaState, MediaWelcome } from "./media";
 export type { PhraseCategory, PhraseId } from "./phrases";
 export { isPhraseId, PHRASE_CATEGORIES, PHRASES } from "./phrases";
@@ -23,7 +23,8 @@ export type ServerMessage =
   | import("./presence").PresenceServerMessage
   | import("./seating").SeatingServerMessage
   | import("./media").MediaServerMessage
-  | import("./phrases").PhrasesServerMessage;
+  | import("./phrases").PhrasesServerMessage
+  | import("./guestbook").GuestbookServerMessage;
 
 export const encode = (m: ServerMessage | ClientMessage): string => JSON.stringify(m);
 

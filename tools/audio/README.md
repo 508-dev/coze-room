@@ -6,8 +6,30 @@ licence record and exact source URLs are in
 [`packs/dormouse-v0/audio/SOURCES.md`](../../packs/dormouse-v0/audio/SOURCES.md).
 
 The pipeline is one deterministic script. It needs `ffmpeg` (with `libopus` for
-the Opus-in-OGG output) on PATH. `sox` is available on the machine but is not
-used by the build; the seam and loudness checks are done in-script with ffmpeg.
+the Opus-in-OGG output) and `python3` with **NumPy** on PATH. `sox` is available
+on the machine but is not used by the build; the seam and loudness checks are
+done in-script with ffmpeg + NumPy.
+
+## Requirements
+
+- `ffmpeg` with the `libopus` encoder (`ffmpeg -encoders | grep libopus`).
+- `python3` (3.11+) with **NumPy**. NumPy is used only for the seam check
+  (`build_beds.py` decodes the loop to floats and compares the step at the loop
+  point); the loop construction and encoding are pure ffmpeg.
+
+Two ways to satisfy NumPy, either is fine:
+
+- **System package (Manjaro/Arch):** `sudo pacman -S python-numpy`.
+  Tested with `python-numpy 2.5.2-1`.
+- **Isolated venv:** keep it out of git (`.venv/` is already in `.gitignore`):
+
+  ```bash
+  python3 -m venv .venv
+  .venv/bin/pip install numpy==2.5.2
+  .venv/bin/python3 tools/audio/build_beds.py --src sources
+  ```
+
+Tested with NumPy 2.5.2; any recent NumPy 2.x should work.
 
 ## Files here
 

@@ -5,7 +5,9 @@ Reproducible from downloaded Freesound high-quality previews. See
 `packs/dormouse-v0/audio/SOURCES.md` for where to fetch the sources and the
 licence record; see `tools/audio/README.md` for the runbook.
 
-Requires `ffmpeg` (with `libopus`) on PATH; the whole build is pure ffmpeg.
+Requires `ffmpeg` (with `libopus`) and `python3` with NumPy on PATH. The loop
+construction and encoding are pure ffmpeg; NumPy is used only for the seam
+check.
 
 The bed is built as a *crossfade-wrapped loop*: take the first `T + F` seconds
 of a source, keep the body from `F` to `T`, and append a `F`-second half-sine

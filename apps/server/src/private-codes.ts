@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 /**
  * Original project word list; no external source or third-party licence.
  * Short, common, concrete words chosen to be read aloud without spelling.
@@ -275,7 +277,6 @@ export function generatePrivateCode(randomIndex: () => number = cryptoRandomInde
 }
 
 function cryptoRandomIndex(): number {
-  // 256 divides 2^32, so reducing one random uint32 is exactly uniform.
-  const random = crypto.getRandomValues(new Uint32Array(1));
-  return (random[0] ?? 0) % PRIVATE_CODE_WORDS.length;
+  // randomInt stays uniform for any list length, not only powers of two.
+  return randomInt(0, PRIVATE_CODE_WORDS.length);
 }

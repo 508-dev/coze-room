@@ -11,4 +11,12 @@ describe("private room codes", () => {
     expect(generatePrivateCode(() => 0)).toBe("amber-amber-amber");
     expect(generatePrivateCode(() => 255)).toBe("peony-peony-peony");
   });
+
+  it("keeps the production sampler compatible with the list bounds", () => {
+    for (let sample = 0; sample < 100; sample += 1) {
+      const words = generatePrivateCode().split("-");
+      expect(words).toHaveLength(3);
+      for (const word of words) expect(PRIVATE_CODE_WORDS).toContain(word);
+    }
+  });
 });

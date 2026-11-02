@@ -1,5 +1,6 @@
 import type { GuestbookEntry } from "@dormouse/protocol";
 import type { Room } from "../room";
+import { PUBLIC_ROOMS } from "../rooms";
 import type { RoomFeature } from "./feature";
 import { type GuestbookStore, getDefaultGuestbookStore } from "./guestbook-store";
 import { GuestbookTally, nightKey, previousNightKey } from "./guestbook-tally";
@@ -8,6 +9,9 @@ import { GuestbookTally, nightKey, previousNightKey } from "./guestbook-tally";
 const RECENT_NIGHTS = 7;
 /** Flush a dirty tally this often, so a crash loses at most this much. */
 const FLUSH_INTERVAL_MS = 30_000;
+
+/** Only public rooms carry a tally; private rooms are ephemeral and code-protected. */
+const PUBLIC_ROOM_IDS = new Set(PUBLIC_ROOMS.map((room) => room.id));
 
 /**
  * The guestbook: count who slept here each night and survive restarts.
@@ -18,6 +22,9 @@ const FLUSH_INTERVAL_MS = 30_000;
  * memory. Because the welcome hook is synchronous it serves whatever is cached
  * so far; once the store finishes loading (or a night rolls over) a `guestbook`
  * push carries the freshest snapshot to anyone already connected.
+ *
+ * Private rooms are excluded: they are ephemeral and code-protected, so there
+ * is no meaningful "who slept here last night" to remember for them.
  */
 export function createGuestbookFeature(
   store: GuestbookStore = getDefaultGuestbookStore(),
@@ -33,6 +40,7 @@ export function createGuestbookFeature(
   let lastFlushAt = -Infinity;
   let dirty = false;
   let failed = false;
+  let destroyed = false;
   let ready: Promise<void> = Promise.resolve();
 
   void store.init();
@@ -53,7 +61,7 @@ export function createGuestbookFeature(
   }
 
   function start(room: Room): void {
-    if (roomId !== null) return;
+    if (destroyed || roomId !== null) return;
     roomId = room.spec.id;
     roomRef = room;
     currentNight = nightKey(now());
@@ -134,10 +142,12 @@ export function createGuestbookFeature(
 
   return {
     onJoin(room, occupant) {
+      if (!PUBLIC_ROOM_IDS.has(room.spec.id)) return;
       start(room);
       lastAsleep.set(occupant.id, occupant.asleep);
     },
     onLeave(room, occupant) {
+      if (!PUBLIC_ROOM_IDS.has(room.spec.id)) return;
       start(room);
       lastAsleep.delete(occupant.id);
       if (occupant.asleep) {
@@ -146,13 +156,23 @@ export function createGuestbookFeature(
       }
     },
     onTick(room, at) {
+      if (!PUBLIC_ROOM_IDS.has(room.spec.id)) return;
       start(room);
       observe(room, at);
       maybeFlush(at);
     },
     welcome(room) {
+      if (!PUBLIC_ROOM_IDS.has(room.spec.id)) return { guestbook: [], lastNight: "" };
       start(room);
       return { guestbook: entries, lastNight };
+    },
+    destroy() {
+      // Final best-effort flush of any un-persisted tally, then drop the room
+      // reference so a late load/refresh cannot broadcast to a retired room.
+      destroyed = true;
+      if (roomId !== null) void flush(now());
+      roomId = null;
+      roomRef = null;
     },
   };
 }

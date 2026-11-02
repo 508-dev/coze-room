@@ -66,30 +66,33 @@ describe("guestbook layer", () => {
     events.emit("guestbookUpdate", { sleepers: 12 });
     const root = container.children[0] as Container;
     const text = () => root.children.find((c) => c instanceof Text) as Text;
-    expect(text().text).toBe("12 slept here last night");
+    expect(text().text).toBe("12");
 
     events.emit("guestbookUpdate", { sleepers: 0 });
-    expect(text().text).toBe("no one slept here last night");
+    expect(text().text).toBe("0");
 
     events.emit("guestbookUpdate", { sleepers: null });
-    expect(text().text).toBe("no one yet");
+    expect(text().text).toBe("");
 
     layer.destroy();
     container.destroy({ children: true });
   });
 
-  it("centres the board on the spot", () => {
+  it("centres the board on the pack spot", () => {
     const container = new Container();
     const events = new RoomEvents();
     const layer = createGuestbookLayer();
     layer.attach({ container, events, toRoomPoint: (p) => p });
-    layer.onRoomChange?.({ id: "r", name: "r", seats: [], capacity: 1 }, null);
+    // Real pack: 128x72 room, guestbook centre at [72, 39] -> board is 16x10.
+    layer.onRoomChange?.(
+      { id: "r", name: "r", seats: [], capacity: 1 },
+      pack({ guestbook: { spot: [72, 39] } }, [128, 72]),
+    );
 
-    // Default spot is [124, 76]; the 152x54 frame top-left is (124-76, 76-27).
     const root = container.children[0] as Container;
     const frame = root.children[0] as Container;
-    expect(frame.position.x).toBe(48);
-    expect(frame.position.y).toBe(49);
+    expect(frame.position.x).toBe(64);
+    expect(frame.position.y).toBe(34);
 
     layer.destroy();
     container.destroy({ children: true });

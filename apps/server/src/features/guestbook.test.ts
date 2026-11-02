@@ -188,4 +188,50 @@ describe("guestbook feature", () => {
     expect(() => room.join("a", "ada", LOOK, socket.socket)).not.toThrow();
     expect(room.occupants).toHaveLength(1);
   });
+
+  it("does not tally or persist private rooms", async () => {
+    const store = new MemoryGuestbookStore();
+    const feature = createGuestbookFeature(store, () => local(2026, 11, 3, 7, 0));
+    const a = occupant("a", false);
+    const room = {
+      spec: { ...spec, id: "private-room" },
+      occupants: [a],
+      broadcast: () => {},
+    } as unknown as Room;
+
+    feature.onJoin?.(room, a);
+    expect(feature.welcome?.(room, "a")).toEqual({ guestbook: [], lastNight: "" });
+    a.asleep = true;
+    feature.onTick?.(room, local(2026, 11, 3, 7, 11));
+    await settle();
+
+    expect(await store.list("private-room", 10)).toEqual([]);
+  });
+
+  it("flushes on destroy and stops tallying afterwards", async () => {
+    const store = new MemoryGuestbookStore();
+    let clock = local(2026, 11, 2, 22, 0);
+    const now = () => clock;
+    const feature = createGuestbookFeature(store, now);
+    const a = occupant("a", false);
+    const room = roomWith([a]);
+
+    feature.onJoin?.(room, a);
+    await settle();
+    a.asleep = true;
+    clock = local(2026, 11, 2, 22, 11);
+    feature.onTick?.(room, clock);
+    await settle();
+
+    expect(() => feature.destroy?.()).not.toThrow();
+    await settle();
+
+    // A later tick on the retired room must not re-initialise or write.
+    a.asleep = false;
+    feature.onTick?.(room, local(2026, 11, 2, 23, 0));
+    await settle();
+    expect(await store.list("the-back-room", 10)).toEqual([
+      { date: "2026-11-02", sleepers: 1, sleeperHours: 0 },
+    ]);
+  });
 });

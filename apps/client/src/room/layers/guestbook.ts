@@ -19,18 +19,21 @@ declare module "../events" {
 // Feature-owned pack section, validated here (see frontend.md).
 declare module "../packs/manifest" {
   interface PackSections {
-    /** Top-left of the chalkboard, in room-space pixels. */
+    /** Centre of the chalkboard, in room-space pixels (from art.json's rect). */
     guestbook?: { spot: [number, number] };
   }
 }
 
-/** A sensible wall spot in the 640x360 placeholder, when no pack sets one. */
+/** A sensible wall centre in the 640x360 placeholder, when no pack sets one. */
 const DEFAULT_SPOT: [number, number] = [124, 76];
-const BOARD_WIDTH = 152;
-const BOARD_HEIGHT = 54;
 const FRAME_COLOUR = 0x4a3626;
 const BOARD_COLOUR = 0x1f2a1a;
 const CHALK_COLOUR = 0xe8e2d0;
+
+/** A small chalkboard: about 1/8 the room wide, 1/7 tall, matching the pack art. */
+function boardSize([w, h]: readonly [number, number]): [number, number] {
+  return [Math.max(12, Math.round(w / 8)), Math.max(8, Math.round(h / 7))];
+}
 
 /**
  * Resolve a valid board centre from the pack section, else the default. The
@@ -53,16 +56,17 @@ export function guestbookSpot(pack: LoadedPack | null): [number, number] {
 }
 
 /**
- * A chalkboard on the wall that reads as furniture and carries "N slept here
- * last night" in small pixel text. Placeholder art: a plain board plus a label,
- * to be replaced by a real indexed sprite later. Clicking toggles the detail
- * panel in the DOM.
+ * A chalkboard on the wall that reads as furniture. Placeholder art: a plain
+ * board plus a short count label (the room is too small for a full sentence;
+ * the DOM panel carries "N slept here last night"). The count stays Pixi text
+ * until a bitmap font lands after #73.
  */
 export function createGuestbookLayer(): SceneLayer {
   const root = new Container();
   let context: LayerContext | null = null;
   let sleepers: number | null = null;
   let spot: [number, number] = DEFAULT_SPOT;
+  let size: readonly [number, number] = PLACEHOLDER_SIZE;
   let offUpdate: (() => void) | null = null;
 
   root.eventMode = "static";
@@ -70,26 +74,26 @@ export function createGuestbookLayer(): SceneLayer {
   root.on("pointertap", () => context?.events.emit("guestbookClick", {}));
 
   function label(): string {
-    if (sleepers === null) return "no one yet";
-    if (sleepers === 0) return "no one slept here last night";
-    return `${sleepers} slept here last night`;
+    return sleepers === null ? "" : String(sleepers);
   }
 
   function draw(): void {
     for (const child of root.removeChildren()) child.destroy();
-    // `spot` is the board's centre; derive its top-left.
     const [cx, cy] = spot;
-    const x = cx - BOARD_WIDTH / 2;
-    const y = cy - BOARD_HEIGHT / 2;
-    const frame = new Graphics().roundRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT, 4).fill(FRAME_COLOUR);
+    const [width, height] = boardSize(size);
+    const x = Math.round(cx - width / 2);
+    const y = Math.round(cy - height / 2);
+    const frame = new Graphics().roundRect(0, 0, width, height, 2).fill(FRAME_COLOUR);
     frame.position.set(x, y);
-    const board = new Graphics()
-      .roundRect(3, 3, BOARD_WIDTH - 6, BOARD_HEIGHT - 6, 2)
-      .fill(BOARD_COLOUR);
+    const board = new Graphics().roundRect(2, 2, width - 4, height - 4, 1).fill(BOARD_COLOUR);
     board.position.set(x, y);
     const text = new Text({
       text: label(),
-      style: { fontSize: 10, fontFamily: "monospace", fill: CHALK_COLOUR, align: "center" },
+      style: {
+        fontSize: Math.max(3, Math.round(height / 2)),
+        fontFamily: "monospace",
+        fill: CHALK_COLOUR,
+      },
     });
     text.anchor.set(0.5);
     text.position.set(cx, cy);
@@ -108,7 +112,8 @@ export function createGuestbookLayer(): SceneLayer {
       // If the welcome already arrived before this layer attached, ask for it.
       context.events.emit("guestbookRequest", {});
     },
-    onRoomChange(_room: RoomSpec, pack: LoadedPack | null) {
+    onRoomChange(room: RoomSpec, pack: LoadedPack | null) {
+      size = pack?.manifest.room.size ?? PLACEHOLDER_SIZE;
       spot = guestbookSpot(pack);
       draw();
     },

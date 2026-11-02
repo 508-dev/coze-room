@@ -199,12 +199,16 @@ empty room — the difference between a room reading as *abandoned* and reading 
   choice and is bounded to the last 14 nights per room; a database that drops
   *mid-run* simply drops those writes (the tally keeps accruing in memory and
   flush failures are logged once), rather than crashing or blocking the room.
-- **The in-scene object** is a chalkboard on the wall carrying "N slept here
-  last night" in small pixel text, positioned from the pack section
-  `sections.guestbook.spot` (the board's centre, in room-space pixels — the pack
-  contract from PR #72) and falling back to a sensible wall spot in the 640×360
-  placeholder. Clicking it opens a panel listing the last few nights. The label
-  is placeholder Pixi text until a bitmap font lands after #73.
+  **Only public rooms tally.** Private rooms are ephemeral (destroyed ten
+  minutes after the last person leaves) and code-protected, so there is no
+  meaningful overnight record for them; the guestbook feature is a no-op there.
+- **The in-scene object** is a small chalkboard on the wall, positioned from the
+  pack section `sections.guestbook.spot` (the board's centre, in room-space
+  pixels — the pack contract from PR #72) and falling back to a sensible wall
+  spot in the 640×360 placeholder. It carries the sleeper count as a short
+  number; the room is too small for a full sentence, which lives in the DOM
+  panel that opens on click and lists the last few nights. The number stays
+  Pixi text until a bitmap font lands after #73.
 - **The wake summary** is a quiet, fading line naming (at most a few) occupants
   still asleep when you wake — the only social payoff the product can honestly
   offer.

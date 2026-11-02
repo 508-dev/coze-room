@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@dormouse/protocol": "workspace:*",
+    "@pixi/gif": "3.0.1",
     "pixi.js": "^8.6.6"
   },
   "devDependencies": {

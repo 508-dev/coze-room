@@ -1,6 +1,6 @@
 /** Composable wire contract. Feature messages live beside this registry. */
 export type { GuestbookEntry, GuestbookWelcome } from "./guestbook";
-export type { MediaState, MediaWelcome } from "./media";
+export type { MediaItem, MediaState, MediaWelcome } from "./media";
 export type { WelcomeFields, WelcomeMessage } from "./presence";
 export {
   normalizePrivateCode,
@@ -13,6 +13,7 @@ export const PROTOCOL_VERSION = 1;
 
 export type ClientMessage =
   | import("./presence").PresenceClientMessage
+  | import("./media").MediaClientMessage
   | import("./seating").SeatingClientMessage;
 
 export type ServerMessage =

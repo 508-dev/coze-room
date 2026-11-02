@@ -193,4 +193,17 @@ describe("room features", () => {
     second.join("c", "cy", LOOK, socket);
     expect(socket.sent[0]).toMatchObject({ media: { startedAt: 1 } });
   });
+
+  it("tears down feature resources once when a room is retired", () => {
+    const destroy = vi.fn();
+    const onTick = vi.fn();
+    const room = new Room(spec, [() => ({ destroy, onTick })]);
+    room.join("a", "ada", LOOK, recorder());
+    room.destroy();
+    room.destroy();
+    room.tick();
+    expect(destroy).toHaveBeenCalledOnce();
+    expect(onTick).not.toHaveBeenCalled();
+    expect(room.occupants).toEqual([]);
+  });
 });

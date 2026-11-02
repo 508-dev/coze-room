@@ -59,6 +59,58 @@ attempts for the same valid code do not consume the reconnect budget. With
 the single Coolify/Traefik proxy. Enable it only when the app port is reachable
 through that proxy and never directly by clients.
 
+### Local catalogue playback (no R2 required)
+
+Ingest the mirrored sources as described in `tools/media/README.md`. Files stay
+outside the repository. In the client terminal, opt into the Vite-only rendition
+route (and use the same port exports as above):
+
+```sh
+DORMOUSE_MEDIA_DIR="$HOME/dormouse-media/renditions" \
+VITE_MEDIA_BASE_URL=/__media \
+VITE_API_BASE_URL="http://127.0.0.1:$API_PORT" bun run --cwd apps/client dev
+```
+
+`DORMOUSE_MEDIA_DIR` is server-side dev configuration and takes an **absolute**
+path. The route accepts only generated `<id>.mp4`, `.m4a`, and `.gif` files,
+supports native single-byte-Range requests, and refuses paths/symlinks outside
+that directory. It is absent from production builds **and** Vite preview; no
+media is copied into `dist`. Production instead sets `VITE_MEDIA_BASE_URL` at
+build time to the R2 custom domain. That domain must allow browser CORS GET
+for the GIF fetch/decoder as well as Range requests for native playback.
+Leaving the base empty keeps the TV quietly off.
+
+Click the in-scene TV or the accessible "Playing from the shelf" button. Two
+clients joining at different times should seek into the same film; check
+`206 Partial Content` for the MP4 and that no original source host is contacted.
+The shelf is split into Silent / With sound, with per-title credits. Drift-off
+should unload MP4 and use only M4A; waking returns to MP4 only while the watch
+view is open. A browser autoplay refusal should offer a tap-to-play/listen
+button, not break the room. The GIF is a short excerpt, not a synced full film.
+
+The server sends public catalogue metadata in welcome, plus `(itemId,
+startedAt)` and a clock sample; changes broadcast `media`. A `mediaSync`
+request every 30 seconds refreshes state and estimates server clock offset
+using its round-trip midpoint. The estimate is deliberately unsmoothed: the
+2-second seek deadband and 30-second resampling absorb occasional RTT outliers.
+The native player resyncs every 15 seconds and on media snapshots. The house
+schedule cycles manifest order from a fixed
+2026-01-01 UTC reference, calculating directly from durations: restarts,
+skipped ticks and empty rooms do not restart or cumulatively drift the film.
+An occupied room arms one boundary timeout for prompt title changes; the room
+tick remains a backstop. The timeout is cancelled when the room empties or its
+owner calls `room.destroy()` before retiring it.
+`media-playlist.ts` is the strategy seam for future user queues; this does not
+implement queue requests, skip votes, or play/pause propagation.
+The server defensively reads and validates `catalogue/manifest.json` at feature
+construction, so deployment images should include `catalogue/` alongside the
+server and protocol workspaces. Missing/invalid catalogues warn once and leave
+the TV off without disabling presence, seating, or the rest of the server.
+
+R2 provisioning/upload (#61) and human approval of the manifest's pending
+rights reviews remain release prerequisites; local playback does not imply
+either is complete.
+
 ## How to add a server/protocol feature
 
 Keep transport and room lifetime independent of feature logic:

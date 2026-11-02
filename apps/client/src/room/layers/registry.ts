@@ -3,6 +3,7 @@ import { createBackgroundLayer } from "./background";
 import { createEnvironmentLayer } from "./environment";
 import type { SceneLayerFactory } from "./layer";
 import { createLightsLayer } from "./lights";
+import { createMediaLayer } from "./media";
 import { createSeatsLayer } from "./seats";
 
 export const sceneLayers: readonly SceneLayerFactory[] = [
@@ -11,4 +12,5 @@ export const sceneLayers: readonly SceneLayerFactory[] = [
   createLightsLayer,
   createSeatsLayer,
   createAvatarsLayer,
+  createMediaLayer,
 ];

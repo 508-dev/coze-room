@@ -421,8 +421,8 @@ exactly what generation cannot keep consistent.
     pixels stay fixed, so it needs no extra mask. Re-check that condition when
     replacing sprites or moving breath lines; see
     [`frontend.md`](frontend.md#v01-art-integration).
-- **Asset count is looks × seats × 2.** Six looks across four seats is 48
-  sprites: minutes of GPU time, plus cleanup.
+- **Asset count is looks × seats × 2.** v0.1 ships four looks across four
+  seats: 32 sprites, minutes of GPU time plus cleanup.
 
 **What changed.**
 
@@ -450,13 +450,13 @@ experiment 2):
 - **Procedural motion is enough** to make the room feel inhabited: breathing,
   z's, rain on the glass, and palette-cycled lamp and CRT.
 
-**Still unshown:**
+**Since shown in the v0.1 build** (live QA, 2026-11-03): two neighbours on one
+couch and three or more occupants at once, with no silhouette overlap; hammock
+and beanbag seats, inpainted into the empty room on purpose because SDXL would
+not draw either from the prompt; breathing without an occluder, because this
+pack's breath lines sit above every furniture edge.
 
-- a breathing sitter behind a foreground armrest;
-- blinking;
-- two neighbours on one couch;
-- hammock and beanbag seats. SDXL would not draw either furniture piece from
-  the prompt alone.
+**Still not done:** blinking.
 
 ## Distribution
 
@@ -481,22 +481,25 @@ stays past the novelty.
 | Item | Issue | State |
 |---|---|---|
 | One public room | — | done (skeleton) |
-| Private rooms by code | [#31](https://github.com/508-dev/coze-room/issues/31) | |
-| Two window views | [#55](https://github.com/508-dev/coze-room/issues/55) | |
+| Private rooms by code | [#31](https://github.com/508-dev/coze-room/issues/31) | done ([#76](https://github.com/508-dev/coze-room/pull/76)) |
+| Two window views | [#55](https://github.com/508-dev/coze-room/issues/55) | done ([#71](https://github.com/508-dev/coze-room/pull/71), [#72](https://github.com/508-dev/coze-room/pull/72)) |
 | Demo users only — no accounts, no moderation | — | done by omission |
-| Preset chat bubbles, no voice-over | [#60](https://github.com/508-dev/coze-room/issues/60) | |
-| Seat-based occupants, awake/asleep, procedural motion | [#54](https://github.com/508-dev/coze-room/issues/54) | |
+| Preset chat bubbles, no voice-over | [#60](https://github.com/508-dev/coze-room/issues/60) | done ([#73](https://github.com/508-dev/coze-room/pull/73)) |
+| Seat-based occupants, awake/asleep, procedural motion | [#54](https://github.com/508-dev/coze-room/issues/54) | done ([#71](https://github.com/508-dev/coze-room/pull/71), [#72](https://github.com/508-dev/coze-room/pull/72)) |
 | Three seats: couch, beanbag, hammock | — | done (four, as data) |
-| Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | |
-| Ambient audio bed | [#58](https://github.com/508-dev/coze-room/issues/58) | |
-| Guestbook | [#56](https://github.com/508-dev/coze-room/issues/56) | done |
+| Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | built ([#67](https://github.com/508-dev/coze-room/pull/67), [#75](https://github.com/508-dev/coze-room/pull/75)); TV stays off until R2 ([#61](https://github.com/508-dev/coze-room/issues/61)) and human rights sign-off |
+| Ambient audio bed | [#58](https://github.com/508-dev/coze-room/issues/58) | done ([#70](https://github.com/508-dev/coze-room/pull/70), [#78](https://github.com/508-dev/coze-room/pull/78)) |
+| Guestbook | [#56](https://github.com/508-dev/coze-room/issues/56) | done ([#77](https://github.com/508-dev/coze-room/pull/77)) |
 | Drift-off mode | — | done (throttle + dim) |
-| Blurred attract-mode start screen | [#59](https://github.com/508-dev/coze-room/issues/59) | |
+| Blurred attract-mode start screen | [#59](https://github.com/508-dev/coze-room/issues/59) | done ([#74](https://github.com/508-dev/coze-room/pull/74)) |
 
 Supporting work, all `v0.1-blocker`: the art pipeline
-([#50](https://github.com/508-dev/coze-room/issues/50)–[#53](https://github.com/508-dev/coze-room/issues/53))
+([#50](https://github.com/508-dev/coze-room/issues/50)–[#53](https://github.com/508-dev/coze-room/issues/53), done)
 and hosting
-([#61](https://github.com/508-dev/coze-room/issues/61)).
+([#61](https://github.com/508-dev/coze-room/issues/61)). The app is live at
+<https://dormouse.508.dev> on Coolify, deploying from `main`
+([`deployment.md`](deployment.md)); the `dormouse.house` domain and the R2 media
+bucket are still to do.
 
 The riskiest assumption is not technical. It is **"a still room containing
 sleeping strangers is pleasant to be in."** That is testable in weeks, before

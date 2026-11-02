@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import manifest from "../../../../../packs/dormouse-v0/manifest.json";
 import {
   breathingOffset,
   motionPhase,
@@ -9,7 +10,7 @@ import {
 
 describe("procedural occupant motion", () => {
   it("keeps colour identity deterministic across seats, and covers all looks", () => {
-    const looks = ["cream", "ember", "moss", "teal"];
+    const looks = manifest.sections.occupants.looks;
     expect(occupantLook("ada", looks)).toBe(occupantLook("ada", [...looks]));
     expect(
       new Set(Array.from({ length: 100 }, (_, i) => occupantLook(`guest-${i}`, looks))).size,

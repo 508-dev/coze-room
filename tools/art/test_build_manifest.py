@@ -14,6 +14,9 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(result["room"]["size"], [128, 72])
         self.assertEqual(result["sections"]["tv"]["screen"], list(self.art["tvScreen"].values()))
         self.assertEqual(len(result["sections"]["occupants"]["sprites"]), 32)
+        self.assertEqual(result["sections"]["occupants"]["looks"],
+                         sorted({sprite["look"] for sprite in self.art["occupants"].values()}))
+        self.assertNotIn("contact-sheet.png", json.dumps(result))
         self.assertEqual(result, build_manifest(copy.deepcopy(self.art)))
         files = [result["room"]["background"], *result["room"]["windowViews"].values(),
                  *result["sections"]["occupants"]["sprites"]]

@@ -15,9 +15,9 @@
   "sections": {
     "occupants": {
       "looks": [
-        "cream",
         "ember",
         "moss",
+        "plum",
         "teal"
       ],
       "seats": {
@@ -30,7 +30,7 @@
         },
         "couch-r": {
           "anchor": [
-            79,
+            65,
             60
           ],
           "pose": "sit"
@@ -44,8 +44,8 @@
         },
         "hammock": {
           "anchor": [
-            62,
-            59
+            104,
+            62
           ],
           "pose": "lie"
         }
@@ -99,9 +99,9 @@
             16
           ]
         },
-        "occupants/couch-l-cream-awake.png": {
+        "occupants/couch-l-plum-awake.png": {
           "seat": "couch-l",
-          "look": "cream",
+          "look": "plum",
           "state": "awake",
           "breathRow": 44,
           "headBox": [
@@ -111,9 +111,9 @@
             16
           ]
         },
-        "occupants/couch-l-cream-asleep.png": {
+        "occupants/couch-l-plum-asleep.png": {
           "seat": "couch-l",
-          "look": "cream",
+          "look": "plum",
           "state": "asleep",
           "breathRow": 44,
           "headBox": [
@@ -153,7 +153,7 @@
           "state": "awake",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
@@ -165,7 +165,7 @@
           "state": "asleep",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
@@ -177,7 +177,7 @@
           "state": "awake",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
@@ -189,31 +189,31 @@
           "state": "asleep",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
           ]
         },
-        "occupants/couch-r-cream-awake.png": {
+        "occupants/couch-r-plum-awake.png": {
           "seat": "couch-r",
-          "look": "cream",
+          "look": "plum",
           "state": "awake",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
           ]
         },
-        "occupants/couch-r-cream-asleep.png": {
+        "occupants/couch-r-plum-asleep.png": {
           "seat": "couch-r",
-          "look": "cream",
+          "look": "plum",
           "state": "asleep",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
@@ -225,7 +225,7 @@
           "state": "awake",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
@@ -237,7 +237,7 @@
           "state": "asleep",
           "breathRow": 45,
           "headBox": [
-            68,
+            54,
             33,
             22,
             16
@@ -291,9 +291,9 @@
             17
           ]
         },
-        "occupants/beanbag-cream-awake.png": {
+        "occupants/beanbag-plum-awake.png": {
           "seat": "beanbag",
-          "look": "cream",
+          "look": "plum",
           "state": "awake",
           "breathRow": 47,
           "headBox": [
@@ -303,9 +303,9 @@
             17
           ]
         },
-        "occupants/beanbag-cream-asleep.png": {
+        "occupants/beanbag-plum-asleep.png": {
           "seat": "beanbag",
-          "look": "cream",
+          "look": "plum",
           "state": "asleep",
           "breathRow": 47,
           "headBox": [
@@ -345,10 +345,10 @@
           "state": "awake",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         },
         "occupants/hammock-ember-asleep.png": {
@@ -357,10 +357,10 @@
           "state": "asleep",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         },
         "occupants/hammock-moss-awake.png": {
@@ -369,10 +369,10 @@
           "state": "awake",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         },
         "occupants/hammock-moss-asleep.png": {
@@ -381,34 +381,34 @@
           "state": "asleep",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         },
-        "occupants/hammock-cream-awake.png": {
+        "occupants/hammock-plum-awake.png": {
           "seat": "hammock",
-          "look": "cream",
+          "look": "plum",
           "state": "awake",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         },
-        "occupants/hammock-cream-asleep.png": {
+        "occupants/hammock-plum-asleep.png": {
           "seat": "hammock",
-          "look": "cream",
+          "look": "plum",
           "state": "asleep",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         },
         "occupants/hammock-teal-awake.png": {
@@ -417,10 +417,10 @@
           "state": "awake",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         },
         "occupants/hammock-teal-asleep.png": {
@@ -429,10 +429,10 @@
           "state": "asleep",
           "breathRow": 49,
           "headBox": [
-            33,
-            41,
+            83,
+            40,
             17,
-            14
+            15
           ]
         }
       }

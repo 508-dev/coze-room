@@ -27,9 +27,14 @@ onMount(() => {
     background: var(--bg);
   }
 
-  /* The canvas renders at half resolution; CSS upscales and softens it further. */
+  /* Cover the decorative viewport; the interactive room still fits without cropping. */
   .backdrop.stylised {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: max(100%, calc(100dvh * 16 / 9));
+    height: max(100%, calc(100vw * 9 / 16));
     filter: blur(14px) brightness(0.45) saturate(0.75);
-    transform: scale(1.04);
+    transform: translate(-50%, -50%) scale(1.04);
   }
 </style>

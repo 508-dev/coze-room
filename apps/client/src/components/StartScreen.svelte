@@ -2,6 +2,7 @@
 import type { PrivateRoomCreated, PublicRoomSummary } from "@dormouse/protocol";
 import { normalizePrivateCode } from "@dormouse/protocol";
 import { onMount } from "svelte";
+import { watchPrivateCodeHash } from "../features/private-room-links";
 import { createPrivateRoom, listPublicRooms } from "../features/private-rooms";
 import type { RoomState } from "../state/room.svelte";
 import AttractBackdrop from "./AttractBackdrop.svelte";
@@ -100,12 +101,16 @@ $effect(() => {
 
 onMount(() => {
   void loadRooms();
-  const deepCode = new URLSearchParams(window.location.hash.slice(1)).get("code");
-  if (deepCode) {
+  const stopWatching = watchPrivateCodeHash(window, (deepCode) => {
     deepLink = true;
+    created = null;
+    copyStatus = "";
     roomState.joinByCode(deepCode);
-  }
-  return () => roomState.dispose();
+  });
+  return () => {
+    stopWatching();
+    roomState.dispose();
+  };
 });
 </script>
 

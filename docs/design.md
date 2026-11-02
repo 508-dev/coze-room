@@ -167,6 +167,40 @@ The binding constraint on video is rights clearance, not bytes.
 - **Independent audio sleep timer** with a wind-down ramp.
 - **Optional room-exit timer**, off by default.
 
+### Guestbook
+
+The overnight guestbook is one of the two v0.1 things specifically about sleep.
+It answers "did anyone sleep here?" for the person who arrives to an otherwise
+empty room — the difference between a room reading as *abandoned* and reading as
+*peaceful*.
+
+- **A night keys to local server midnight.** The key is the calendar date of the
+  midnight that *starts* the night, so "last night" at 07:00 on 2026-11-03 is
+  `2026-11-02`.
+- **A sleep is attributed entirely to the night it begins in.** A sleep that
+  spans midnight counts wholly for the night the person fell asleep in, so no
+  one is double-counted and no sleep is split across two nights.
+- **Distinct sleepers** means distinct occupants who fell asleep that night, one
+  per night no matter how many times they doze off and wake. Occupant ids are
+  server-assigned per connection, so "distinct" is per process lifetime; a
+  mid-night restart cannot double-count within a session, and a night's
+  pre-restart tally is folded back in at boot. No names or ids are ever stored.
+- **Sleeper-hours** are fractional hours summed per night — closed episodes plus
+  the partial hours of anyone still asleep at flush time.
+- **Persistence** is one Postgres table, `guestbook_tally (room_id, night,
+  sleepers, sleeper_hours)`, via Bun's built-in SQL client — no new dependency.
+  A tiny idempotent migration runs at startup. If `DATABASE_URL` is unset or the
+  database is unreachable, the guestbook logs once and runs in memory: the room
+  never fails to start because of it.
+- **The in-scene object** is a chalkboard on the wall carrying "N slept here
+  last night" in small pixel text, positioned from the pack section
+  `sections.guestbook.spot` (room-space pixels) and falling back to a sensible
+  spot in the 640×360 placeholder. Clicking it opens a panel listing the last
+  few nights.
+- **The wake summary** is a quiet, fading line naming (at most a few) occupants
+  still asleep when you wake — the only social payoff the product can honestly
+  offer.
+
 ### Data budget
 
 Non-media traffic is a rounding error: state events run well under one per
@@ -441,7 +475,7 @@ stays past the novelty.
 | Three seats: couch, beanbag, hammock | — | done (four, as data) |
 | Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | |
 | Ambient audio bed | [#58](https://github.com/508-dev/coze-room/issues/58) | |
-| Guestbook | [#56](https://github.com/508-dev/coze-room/issues/56) | protocol stubbed, nothing populates it |
+| Guestbook | [#56](https://github.com/508-dev/coze-room/issues/56) | done |
 | Drift-off mode | — | done (throttle + dim) |
 | Blurred attract-mode start screen | [#59](https://github.com/508-dev/coze-room/issues/59) | |
 

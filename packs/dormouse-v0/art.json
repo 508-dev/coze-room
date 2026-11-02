@@ -1,0 +1,477 @@
+{
+  "version": 1,
+  "imageSize": {
+    "width": 128,
+    "height": 72
+  },
+  "coordinateSystem": "Room-space true pixels. Box x/y is the top-left corner; breathRow is the absolute y split for the procedural breathing bob.",
+  "files": {
+    "room": "room.png",
+    "windowCutout": "room-window-cutout.png",
+    "windowGlassMask": "window-glass-mask.png",
+    "views": {
+      "rain": "view-rain.png",
+      "clear-night": "view-clear-night.png"
+    }
+  },
+  "seats": {
+    "couch-l": {
+      "anchor": {
+        "x": 42,
+        "y": 59
+      },
+      "pose": "sit"
+    },
+    "couch-r": {
+      "anchor": {
+        "x": 79,
+        "y": 60
+      },
+      "pose": "sit"
+    },
+    "beanbag": {
+      "anchor": {
+        "x": 18,
+        "y": 64
+      },
+      "pose": "sit"
+    },
+    "hammock": {
+      "anchor": {
+        "x": 62,
+        "y": 59
+      },
+      "pose": "lie"
+    }
+  },
+  "occupants": {
+    "occupants/couch-l-ember-awake.png": {
+      "seat": "couch-l",
+      "look": "ember",
+      "state": "awake",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-l-ember-asleep.png": {
+      "seat": "couch-l",
+      "look": "ember",
+      "state": "asleep",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-l-moss-awake.png": {
+      "seat": "couch-l",
+      "look": "moss",
+      "state": "awake",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-l-moss-asleep.png": {
+      "seat": "couch-l",
+      "look": "moss",
+      "state": "asleep",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-l-cream-awake.png": {
+      "seat": "couch-l",
+      "look": "cream",
+      "state": "awake",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-l-cream-asleep.png": {
+      "seat": "couch-l",
+      "look": "cream",
+      "state": "asleep",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-l-teal-awake.png": {
+      "seat": "couch-l",
+      "look": "teal",
+      "state": "awake",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-l-teal-asleep.png": {
+      "seat": "couch-l",
+      "look": "teal",
+      "state": "asleep",
+      "breathRow": 44,
+      "headBox": {
+        "x": 33,
+        "y": 32,
+        "width": 18,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-ember-awake.png": {
+      "seat": "couch-r",
+      "look": "ember",
+      "state": "awake",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-ember-asleep.png": {
+      "seat": "couch-r",
+      "look": "ember",
+      "state": "asleep",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-moss-awake.png": {
+      "seat": "couch-r",
+      "look": "moss",
+      "state": "awake",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-moss-asleep.png": {
+      "seat": "couch-r",
+      "look": "moss",
+      "state": "asleep",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-cream-awake.png": {
+      "seat": "couch-r",
+      "look": "cream",
+      "state": "awake",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-cream-asleep.png": {
+      "seat": "couch-r",
+      "look": "cream",
+      "state": "asleep",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-teal-awake.png": {
+      "seat": "couch-r",
+      "look": "teal",
+      "state": "awake",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/couch-r-teal-asleep.png": {
+      "seat": "couch-r",
+      "look": "teal",
+      "state": "asleep",
+      "breathRow": 45,
+      "headBox": {
+        "x": 68,
+        "y": 33,
+        "width": 22,
+        "height": 16
+      }
+    },
+    "occupants/beanbag-ember-awake.png": {
+      "seat": "beanbag",
+      "look": "ember",
+      "state": "awake",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/beanbag-ember-asleep.png": {
+      "seat": "beanbag",
+      "look": "ember",
+      "state": "asleep",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/beanbag-moss-awake.png": {
+      "seat": "beanbag",
+      "look": "moss",
+      "state": "awake",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/beanbag-moss-asleep.png": {
+      "seat": "beanbag",
+      "look": "moss",
+      "state": "asleep",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/beanbag-cream-awake.png": {
+      "seat": "beanbag",
+      "look": "cream",
+      "state": "awake",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/beanbag-cream-asleep.png": {
+      "seat": "beanbag",
+      "look": "cream",
+      "state": "asleep",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/beanbag-teal-awake.png": {
+      "seat": "beanbag",
+      "look": "teal",
+      "state": "awake",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/beanbag-teal-asleep.png": {
+      "seat": "beanbag",
+      "look": "teal",
+      "state": "asleep",
+      "breathRow": 47,
+      "headBox": {
+        "x": 11,
+        "y": 39,
+        "width": 14,
+        "height": 17
+      }
+    },
+    "occupants/hammock-ember-awake.png": {
+      "seat": "hammock",
+      "look": "ember",
+      "state": "awake",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    },
+    "occupants/hammock-ember-asleep.png": {
+      "seat": "hammock",
+      "look": "ember",
+      "state": "asleep",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    },
+    "occupants/hammock-moss-awake.png": {
+      "seat": "hammock",
+      "look": "moss",
+      "state": "awake",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    },
+    "occupants/hammock-moss-asleep.png": {
+      "seat": "hammock",
+      "look": "moss",
+      "state": "asleep",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    },
+    "occupants/hammock-cream-awake.png": {
+      "seat": "hammock",
+      "look": "cream",
+      "state": "awake",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    },
+    "occupants/hammock-cream-asleep.png": {
+      "seat": "hammock",
+      "look": "cream",
+      "state": "asleep",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    },
+    "occupants/hammock-teal-awake.png": {
+      "seat": "hammock",
+      "look": "teal",
+      "state": "awake",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    },
+    "occupants/hammock-teal-asleep.png": {
+      "seat": "hammock",
+      "look": "teal",
+      "state": "asleep",
+      "breathRow": 49,
+      "headBox": {
+        "x": 33,
+        "y": 41,
+        "width": 17,
+        "height": 14
+      }
+    }
+  },
+  "tvScreen": {
+    "x": 106,
+    "y": 30,
+    "width": 8,
+    "height": 6
+  },
+  "window": {
+    "x": 40,
+    "y": 13,
+    "width": 22,
+    "height": 20
+  },
+  "windowGlass": [
+    {
+      "x": 40,
+      "y": 13,
+      "width": 22,
+      "height": 6
+    },
+    {
+      "x": 40,
+      "y": 21,
+      "width": 22,
+      "height": 12
+    },
+    {
+      "x": 85,
+      "y": 12,
+      "width": 12,
+      "height": 9
+    },
+    {
+      "x": 85,
+      "y": 22,
+      "width": 12,
+      "height": 6
+    }
+  ],
+  "guestbook": {
+    "x": 66,
+    "y": 35,
+    "width": 12,
+    "height": 8
+  }
+}

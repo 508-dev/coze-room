@@ -27,6 +27,10 @@ function playback(element: HTMLMediaElement) {
     },
     media.audioSettings,
     media.item?.silent,
+    {
+      connect: (mediaElement) => roomState.features.audio.connectMediaElement("tv", mediaElement),
+      setVolume: (volume) => roomState.features.audio.setVolume("tv", volume),
+    },
   );
   player = instance;
   return {

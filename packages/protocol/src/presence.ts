@@ -1,9 +1,10 @@
+import type { EnvironmentWelcome } from "./environment";
 import type { GuestbookWelcome } from "./guestbook";
 import type { MediaWelcome } from "./media";
 import type { AvatarLook, Occupant, RoomSpec } from "./types";
 
 /** Add a feature's snapshot interface here; its wire fields stay at the top level. */
-export interface WelcomeFields extends MediaWelcome, GuestbookWelcome {}
+export interface WelcomeFields extends MediaWelcome, GuestbookWelcome, EnvironmentWelcome {}
 
 export interface WelcomeMessage extends WelcomeFields {
   t: "welcome";

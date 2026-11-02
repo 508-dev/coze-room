@@ -155,6 +155,8 @@ The binding constraint on video is rights clearance, not bytes.
 - Environment is **shared state** — changed by the host or simple majority, with
   a 2-minute cooldown and a local-only preview so you can audition before
   spending the cooldown.
+- **For v0.1, any awake occupant may change it** behind the server's `canChange`
+  policy seam; host/simple-majority governance is post-v0.1.
 - **Volume is local; the choice is not.** Forced environment sharing is the
   point.
 

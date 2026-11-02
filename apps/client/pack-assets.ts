@@ -9,6 +9,7 @@ const CONTENT_TYPES: Record<string, string> = {
   webp: "image/webp",
   svg: "image/svg+xml",
   ogg: "audio/ogg",
+  m4a: "audio/mp4",
 };
 
 /** No extra dependency: the same repo-root packs become /packs in dev and dist. */

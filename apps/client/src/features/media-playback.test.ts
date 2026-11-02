@@ -23,8 +23,17 @@ describe("media sync", () => {
 });
 
 describe("drift-off rendition lifecycle", () => {
-  it("preserves local volume and mute across renditions without silent titles muting the next film", () => {
-    const settings = { volume: 0.4, muted: false };
+  it("routes volume through the shared gain and preserves mute across recreated elements", async () => {
+    const settings = { muted: false };
+    const nodes: { disconnect: ReturnType<typeof vi.fn> }[] = [];
+    const routing = {
+      connect: vi.fn(async () => {
+        const node = { disconnect: vi.fn() };
+        nodes.push(node);
+        return node as unknown as MediaElementAudioSourceNode;
+      }),
+      setVolume: vi.fn(),
+    };
     const element = () =>
       Object.assign(new EventTarget(), {
         readyState: 0,
@@ -42,17 +51,35 @@ describe("drift-off rendition lifecycle", () => {
       () => 1,
       vi.fn(),
       settings,
+      false,
+      routing,
     );
-    expect(video.volume).toBe(0.4);
+    expect(video.volume).toBe(1);
     video.volume = 0.15;
+    video.dispatchEvent(new Event("volumechange"));
+    expect(routing.setVolume).toHaveBeenCalledExactlyOnceWith(0.15);
+    expect(video.volume).toBe(1);
     video.muted = true;
     video.dispatchEvent(new Event("volumechange"));
+    await Promise.resolve();
     instance.destroy();
+    expect(nodes[0]?.disconnect).toHaveBeenCalledOnce();
+
     const audio = element();
-    const second = attachPlayback(audio as unknown as HTMLMediaElement, () => 1, vi.fn(), settings);
-    expect(audio.volume).toBe(0.15);
+    const second = attachPlayback(
+      audio as unknown as HTMLMediaElement,
+      () => 1,
+      vi.fn(),
+      settings,
+      false,
+      routing,
+    );
+    expect(audio.volume).toBe(1);
     expect(audio.muted).toBe(true);
+    await Promise.resolve();
     second.destroy();
+    expect(nodes[1]?.disconnect).toHaveBeenCalledOnce();
+
     settings.muted = false;
     const silent = element();
     const third = attachPlayback(
@@ -61,11 +88,13 @@ describe("drift-off rendition lifecycle", () => {
       vi.fn(),
       settings,
       true,
+      routing,
     );
     expect(silent.muted).toBe(true);
     silent.dispatchEvent(new Event("volumechange"));
     expect(settings.muted).toBe(false);
     third.destroy();
+    expect(routing.connect).toHaveBeenCalledTimes(3);
   });
   it("makes one transition to audio, does not switch repeatedly, and wakes to video only if open", () => {
     const states = [

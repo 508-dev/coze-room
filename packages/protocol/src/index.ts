@@ -1,4 +1,6 @@
 /** Composable wire contract. Feature messages live beside this registry. */
+export type { EnvironmentId, EnvironmentWelcome } from "./environment";
+export { ENVIRONMENT_IDS } from "./environment";
 export type { GuestbookEntry, GuestbookServerMessage, GuestbookWelcome } from "./guestbook";
 export type { MediaItem, MediaState, MediaWelcome } from "./media";
 export type { PhraseCategory, PhraseId } from "./phrases";
@@ -17,14 +19,16 @@ export type ClientMessage =
   | import("./presence").PresenceClientMessage
   | import("./media").MediaClientMessage
   | import("./seating").SeatingClientMessage
-  | import("./phrases").PhrasesClientMessage;
+  | import("./phrases").PhrasesClientMessage
+  | import("./environment").EnvironmentClientMessage;
 
 export type ServerMessage =
   | import("./presence").PresenceServerMessage
   | import("./seating").SeatingServerMessage
   | import("./media").MediaServerMessage
   | import("./phrases").PhrasesServerMessage
-  | import("./guestbook").GuestbookServerMessage;
+  | import("./guestbook").GuestbookServerMessage
+  | import("./environment").EnvironmentServerMessage;
 
 export const encode = (m: ServerMessage | ClientMessage): string => JSON.stringify(m);
 

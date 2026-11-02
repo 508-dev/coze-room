@@ -70,6 +70,8 @@ export class Room {
       media: { itemId: null, startedAt: 0 },
       guestbook: [],
       lastNight: "",
+      environment: "rain",
+      environmentCooldownUntil: 0,
     };
     for (const feature of this.features) Object.assign(welcome, feature.welcome?.(this, id));
     socket.send(encode(welcome));

@@ -31,14 +31,19 @@ VITE_API_BASE_URL="http://127.0.0.1:$API_PORT" bun run --cwd apps/client dev
 ```
 
 Open `WEB_URL` from `./scripts/worktree-ports.sh env`. Verify the room name and
-occupant count appear, then click a seat: a brighter circle moves above it.
+occupant count appear, then click furniture: a seated occupant appears.
 Repeat after resizing so a 2x room is centred/letterboxed, then at 360×640 with
 device pixel ratio 2 or 3: the whole room fits fractionally, without cropping,
 and seats stay clickable in CSS coordinates (renderer resolution caps at 2x).
 The network panel should show the same JSON `join`, `welcome`, `takeSeat`, `moved` messages.
-`/packs/test-fixture/manifest.json` should load; builds must contain the same
+`/packs/dormouse-v0/manifest.json` and occupant textures should load. The technical
+fixture `/packs/test-fixture/manifest.json` remains available; builds must contain the same
 fixture under `apps/client/dist/packs/`. To test selection, set a room's optional
 `packId` to `test-fixture` locally; a nonexistent id should warn and keep seats.
+
+After an art revision, run `bun run art:manifest` (Python 3 standard library only).
+Vitest invokes its Python unit tests and checks that the committed manifest is
+byte-identical to regenerated output. See `frontend.md` for the feature sections.
 
 ## How to add a server/protocol feature
 

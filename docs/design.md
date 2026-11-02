@@ -254,13 +254,17 @@ buys is recovery, which the recovery code provides without collecting anything.
 
 ## Art
 
-**Scope:** 1 room, 2 outdoor views (partially visible through a window),
-~28px avatars, 4 poses (stand, sit, lie, sleep) at 2–4 frames each.
+**v0.1 scope:** 1 room, 2 outdoor views (partially visible through windows),
+4 seats × 4 catalogue looks × awake/asleep. The seat determines sitting or lying;
+there is no standing sprite and no drawn animation. Unseated guests remain in the
+presence count, but do not appear on the canvas until they choose a seat.
 
-**Runtime layer compositing, never pre-baked.** Layers: skin/fur tone (8),
-head/hair (8), top (8), accessory (8, including none). Composited at draw time,
-art cost is additive — 4 poses × 4 layer types. Pre-baking would turn this into
-4,096 sprites per pose and kill the project.
+**Per-seat occupant sprites for v0.1**, adopted 2026-11-02 after the inpainting
+experiments below. A small fixed catalogue is 32 sprites, not the combinatorial
+explosion of layered customisation. **Runtime layer compositing** (skin/fur,
+head/hair, top, accessory) moves to #38 after v0.1; never pre-bake its 4,096
+combinations per pose. This change trades customisation for consistent seat
+perspective, readable sleep poses and an achievable generated-art budget.
 
 **Palette: [Atropoeia](https://lospec.com/palette-list/atropoeia), 48 colours.**
 Settled 2026-10-30. Committed at `tools/art/palette.hex` as the single source of
@@ -324,12 +328,11 @@ should be shader-driven regardless of who makes the art.
 id. Swapping generated art for commissioned human art is a data change, not a
 code change. This is the same mechanism the commercial content packs will use.
 
-### Proposed, not agreed: per-seat occupants and procedural motion
+### Adopted for v0.1: per-seat occupants and procedural motion
 
-> Proposed 2026-11-01, from what the art pipeline turned out to be able to do
-> ([`tools/art/EXPERIMENTS.md`](../tools/art/EXPERIMENTS.md)). Nothing above
-> changes until this is agreed. If it is, edit the sections it names and
-> delete this one.
+> Proposed 2026-11-01; adopted for v0.1 on 2026-11-02. The experimental
+> reasoning is retained here; current implementation details are in
+> [`frontend.md`](frontend.md#v01-art-integration).
 
 **The problem.** Runtime layer compositing needs a separate layer per option,
 each lining up with all the others and staying consistent across four poses at
@@ -338,7 +341,7 @@ each part onto a fixed base gets aligned layers for one pose. Nobody has shown
 that a garment survives a change of pose, and drawn animation frames are
 exactly what generation cannot keep consistent.
 
-**The proposal, for v0.1:**
+**The adopted approach, for v0.1:**
 
 - **Occupants are drawn into their seat.** Generate the room empty, then
   inpaint a character into each seat of the empty room and keep only the
@@ -363,12 +366,17 @@ exactly what generation cannot keep consistent.
     colours along a ramp inside a masked region animates fire, candle glow,
     water, TV static and blinking lights with no frames. It suits assets that
     are all indexed against one fixed palette.
-  - Each seat gets a small foreground mask, drawn once and rendered after the
-    occupants, so a breathing sitter never slides over the armrest.
+  - **Foreground masks are conditional, not one per seat.** If an armrest or
+    other foreground furniture crosses the moving upper body, the pack must
+    provide an occluder in `furnitureFront` before release. This pack's breath
+    lines are above those furniture edges: lower bodies and furniture-contact
+    pixels stay fixed, so it needs no extra mask. Re-check that condition when
+    replacing sprites or moving breath lines; see
+    [`frontend.md`](frontend.md#v01-art-integration).
 - **Asset count is looks × seats × 2.** Six looks across four seats is 48
   sprites: minutes of GPU time, plus cleanup.
 
-**What it would change.**
+**What changed.**
 
 - **Layer compositing becomes per-seat sprites for v0.1.** The argument
   against pre-baking was combinatorial (4,096 sprites per pose). It still
@@ -429,7 +437,7 @@ stays past the novelty.
 | Two window views | [#55](https://github.com/508-dev/coze-room/issues/55) | |
 | Demo users only — no accounts, no moderation | — | done by omission |
 | Preset chat bubbles, no voice-over | [#60](https://github.com/508-dev/coze-room/issues/60) | |
-| Seat-based avatars, four poses | [#54](https://github.com/508-dev/coze-room/issues/54) | seats done, poses not drawn |
+| Seat-based occupants, awake/asleep, procedural motion | [#54](https://github.com/508-dev/coze-room/issues/54) | |
 | Three seats: couch, beanbag, hammock | — | done (four, as data) |
 | Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | |
 | Ambient audio bed | [#58](https://github.com/508-dev/coze-room/issues/58) | |

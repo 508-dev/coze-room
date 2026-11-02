@@ -19,7 +19,7 @@ let deepLink = $state(false);
 let copyStatus = $state("");
 const shareLink = $derived(
   created
-    ? `${window.location.origin}${window.location.pathname}?code=${encodeURIComponent(created.code)}`
+    ? `${window.location.origin}${window.location.pathname}#code=${encodeURIComponent(created.code)}`
     : "",
 );
 
@@ -63,15 +63,26 @@ async function copy(text: string, label: string): Promise<void> {
   }
 }
 
+function clearCodeFragment(): void {
+  const url = new URL(window.location.href);
+  const hash = new URLSearchParams(url.hash.slice(1));
+  if (!hash.has("code")) return;
+  hash.delete("code");
+  const remaining = hash.toString();
+  window.history.replaceState(
+    null,
+    "",
+    `${url.pathname}${url.search}${remaining ? `#${remaining}` : ""}`,
+  );
+}
+
 function showHome(): void {
-  roomState.dismissClosedRoom();
+  roomState.resetToStart();
   deepLink = false;
   created = null;
   code = "";
   copyStatus = "";
-  const url = new URL(window.location.href);
-  url.searchParams.delete("code");
-  window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  clearCodeFragment();
   void loadRooms();
 }
 
@@ -80,9 +91,16 @@ function occupancy(room: PublicRoomSummary): string {
   return `${room.occupants} here${room.asleep > 0 ? `, ${room.asleep} asleep` : ""}`;
 }
 
+$effect(() => {
+  if (roomState.connected && deepLink) {
+    clearCodeFragment();
+    deepLink = false;
+  }
+});
+
 onMount(() => {
   void loadRooms();
-  const deepCode = new URLSearchParams(window.location.search).get("code");
+  const deepCode = new URLSearchParams(window.location.hash.slice(1)).get("code");
   if (deepCode) {
     deepLink = true;
     roomState.joinByCode(deepCode);
@@ -101,6 +119,19 @@ onMount(() => {
         <p class="eyebrow">Dormouse</p>
         <h1>That room has closed.</h1>
         <p class="intro">Its sleepers have gone, and the code is no longer in use.</p>
+        <button class="primary" type="button" onclick={showHome}>Back to the start</button>
+      {:else if roomState.roomFull}
+        <p class="eyebrow">This room is full</p>
+        <h1>No spare blankets just yet.</h1>
+        <p class="intro">These people are still inside. Come back a little later.</p>
+        <ul class="full-roster" aria-label="People in this room">
+          {#each roomState.occupants as occupant (occupant.id)}
+            <li>
+              <span>{occupant.name}</span>
+              <small>{occupant.asleep ? "asleep" : "awake"}</small>
+            </li>
+          {/each}
+        </ul>
         <button class="primary" type="button" onclick={showHome}>Back to the start</button>
       {:else if deepLink}
         <p class="eyebrow">Dormouse</p>
@@ -224,6 +255,29 @@ onMount(() => {
   .intro {
     margin: 1rem 0 1.75rem;
     color: #aaa0bb;
+  }
+
+  .full-roster {
+    display: grid;
+    gap: 0.5rem;
+    max-height: 14rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+  }
+
+  .full-roster li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.5rem;
+    background: #cfc6e008;
+  }
+
+  .full-roster small {
+    color: var(--dim);
   }
 
   button,

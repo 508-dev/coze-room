@@ -53,6 +53,8 @@ describe("RoomRegistry private rooms", () => {
     const created = registry.createPrivateRoom(0);
     const room = registry.getByCode(created.code);
     if (!room) throw new Error("private room was not created");
+    const destroy = vi.fn();
+    Object.assign(room, { destroy });
 
     room.join("a", "ada", LOOK, socket);
     registry.tick(0);
@@ -71,6 +73,9 @@ describe("RoomRegistry private rooms", () => {
     registry.tick(evictedAt + PRIVATE_ROOM_IDLE_MS);
     expect(registry.getByCode(created.code)).toBeUndefined();
     expect(registry.get(created.roomId)).toBeUndefined();
+    expect(destroy).toHaveBeenCalledTimes(1);
+    registry.tick(evictedAt + PRIVATE_ROOM_IDLE_MS + 1);
+    expect(destroy).toHaveBeenCalledTimes(1);
   });
 
   it("starts the destruction timer only when the last occupant is evicted", () => {

@@ -99,6 +99,15 @@ describe("Connection feature handlers", () => {
     connection.dispose();
   });
 
+  it("stops reconnecting after a full-room snapshot", () => {
+    const connection = connect();
+    socket().close(1013);
+    vi.advanceTimersByTime(30_000);
+
+    expect(FakeSocket.instances).toHaveLength(1);
+    connection.dispose();
+  });
+
   it("delivers only matching message types to all subscribing features", () => {
     const connection = connect();
     const first = vi.fn();

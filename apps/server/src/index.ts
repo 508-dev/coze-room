@@ -1,4 +1,5 @@
 import { type ClientMessage, decode } from "@dormouse/protocol";
+import { clientIp } from "./client-ip";
 import { RateLimiter } from "./rate-limit";
 import type { RoomSocket } from "./room";
 import { RoomRegistry } from "./room-registry";
@@ -6,6 +7,7 @@ import { serveStatic } from "./static";
 
 const PORT = Number(process.env.API_PORT ?? 8820);
 const TICK_MS = 15_000;
+const PRIVATE_JOIN_WINDOW_MS = 5 * 60 * 1000;
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -14,22 +16,19 @@ const CORS_HEADERS = {
 
 const rooms = new RoomRegistry();
 const privateRoomCreation = new RateLimiter(5, 10 * 60 * 1000);
-const privateRoomJoins = new RateLimiter(20, 5 * 60 * 1000);
+const privateRoomJoins = new RateLimiter(20, PRIVATE_JOIN_WINDOW_MS);
+const recentValidJoins = new Map<string, { roomId: string; expiresAt: number }>();
 
 setInterval(() => {
-  rooms.tick();
+  const now = Date.now();
+  rooms.tick(now);
+  for (const [ip, join] of recentValidJoins) {
+    if (join.expiresAt <= now) recentValidJoins.delete(ip);
+  }
 }, TICK_MS);
 
 function json(data: unknown, status = 200, headers: Record<string, string> = {}): Response {
   return Response.json(data, { status, headers: { ...CORS_HEADERS, ...headers } });
-}
-
-function clientIp(request: Request, directAddress: string | undefined): string {
-  if (process.env.TRUST_PROXY === "1") {
-    const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-    if (forwarded) return forwarded;
-  }
-  return directAddress ?? "unknown";
 }
 
 const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
@@ -67,14 +66,28 @@ const server = Bun.serve<{ occupantId: string; roomId: string }, never>({
     if (url.pathname === "/ws") {
       const code = url.searchParams.get("code");
       if (code !== null) {
-        const limit = privateRoomJoins.check(ip);
-        if (!limit.allowed) {
-          return new Response("too many join attempts", {
-            status: 429,
-            headers: { ...CORS_HEADERS, "Retry-After": String(limit.retryAfterSeconds) },
+        const room = rooms.getByCode(code);
+        const now = Date.now();
+        const recent = recentValidJoins.get(ip);
+        const isReconnect =
+          room !== undefined && recent?.roomId === room.spec.id && recent.expiresAt > now;
+        // A valid code's reconnects are free within the window. This exemption
+        // cannot be spent on guesses: every new or invalid code still counts.
+        if (!isReconnect) {
+          const limit = privateRoomJoins.check(ip, now);
+          if (!limit.allowed) {
+            return new Response("too many join attempts", {
+              status: 429,
+              headers: { ...CORS_HEADERS, "Retry-After": String(limit.retryAfterSeconds) },
+            });
+          }
+        }
+        if (room) {
+          recentValidJoins.set(ip, {
+            roomId: room.spec.id,
+            expiresAt: now + PRIVATE_JOIN_WINDOW_MS,
           });
         }
-        const room = rooms.getByCode(code);
         // Complete the upgrade even for a closed room so the browser receives a
         // deliberate close code instead of an opaque failed-handshake error.
         const upgraded = srv.upgrade(request, {

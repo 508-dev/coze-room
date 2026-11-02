@@ -14,6 +14,7 @@ export class RoomState {
   drifting = $state(false);
   connected = $state(false);
   roomClosed = $state(false);
+  roomFull = $state(false);
   asleepCount = $derived(this.occupants.filter((o) => o.asleep).length);
   readonly features = createClientFeatures();
   readonly events = new RoomEvents();
@@ -30,14 +31,17 @@ export class RoomState {
     this.connect({ code: normalizePrivateCode(code) });
   }
 
-  dismissClosedRoom(): void {
+  resetToStart(): void {
     this.dispose();
     this.roomClosed = false;
+    this.roomFull = false;
+    this.occupants = [];
   }
 
   private connect(target: RoomTarget): void {
     this.dispose();
     this.roomClosed = false;
+    this.roomFull = false;
     this.connected = false;
     this.selfId = null;
     this.room = null;

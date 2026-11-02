@@ -49,6 +49,11 @@ export class Connection {
 
     socket.addEventListener("close", (event) => {
       if (this.closed) return;
+      if (event.code === 1013) {
+        // The full snapshot has already arrived; retrying cannot free a seat.
+        this.closed = true;
+        return;
+      }
       if (event.code === 4004) {
         this.closed = true;
         this.onRoomClosed?.();

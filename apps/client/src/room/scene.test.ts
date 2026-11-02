@@ -38,7 +38,13 @@ vi.mock("pixi.js", async (importOriginal) => {
       canvas = {};
       init = vi.fn(async () => {});
       renderer = { resize: vi.fn() };
-      ticker = { add: mocks.addTicker, remove: vi.fn(), maxFPS: 0 };
+      ticker = {
+        add: mocks.addTicker,
+        remove: vi.fn(),
+        maxFPS: 0,
+        start: vi.fn(),
+        stop: vi.fn(),
+      };
       destroy = vi.fn();
     },
   };
@@ -107,6 +113,10 @@ describe("Scene orchestration", () => {
     expect(scene.app.ticker.maxFPS).toBe(5);
     scene.driftOff(false);
     expect(scene.app.ticker.maxFPS).toBe(0);
+    scene.setPaused(true);
+    expect(scene.app.ticker.stop).toHaveBeenCalledOnce();
+    scene.setPaused(false);
+    expect(scene.app.ticker.start).toHaveBeenCalledOnce();
     scene.destroy();
     expect(mocks.destroy).toHaveBeenCalledOnce();
     expect(mocks.disconnect).toHaveBeenCalledOnce();

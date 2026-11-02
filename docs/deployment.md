@@ -42,6 +42,19 @@ origin and redeploy to enable media. The R2 bucket will also need a CORS policy
 allowing `GET` from `https://dormouse.508.dev` so the browser can decode GIF
 previews.
 
+### Production image smoke test
+
+With Docker and Bun installed, run:
+
+```bash
+./scripts/smoke-production.sh
+```
+
+The script builds the production image, starts it on an unused localhost port,
+and checks health and startup logs, the pack manifest, real PNG bytes (not an
+LFS pointer), and a WebSocket `welcome`. It requires the `dormouse-v0` pack and
+is suitable for wiring into CI after the art-integration branch lands.
+
 PostgreSQL is private to the Coolify destination network. Its generated
 credentials are stored only in Coolify, and the application has `DATABASE_URL`.
 Nothing reads it yet; the guestbook will be its first consumer. Scheduled

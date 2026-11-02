@@ -11,7 +11,6 @@ const DRIFT_FPS = 5;
 export interface SceneInitOptions {
   resolution?: number;
   maxFPS?: number;
-  interactive?: boolean;
 }
 
 /** Pixi lifecycle, logical room transform, clock and feature-layer orchestration. */
@@ -39,7 +38,6 @@ export class Scene {
     this.host = host;
     host.appendChild(this.app.canvas);
     this.app.stage.addChild(this.root);
-    if (options.interactive === false) this.app.stage.eventMode = "none";
     this.app.ticker.maxFPS = options.maxFPS ?? 0;
     const slots = new Map(SCENE_SLOTS.map((name) => [name, this.root.addChild(new Container())]));
     this.layers = sceneLayers.map((create) => create());

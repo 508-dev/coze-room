@@ -7,7 +7,10 @@ let host: HTMLDivElement;
 
 onMount(() => {
   const playback = new AttractPlayback();
-  void playback.init(host);
+  void playback.init(host).catch((error: unknown) => {
+    // biome-ignore lint/suspicious/noConsole: A decorative renderer may fail without blocking room entry.
+    console.error("Attract backdrop could not start", error);
+  });
   return () => playback.destroy();
 });
 </script>
@@ -19,6 +22,7 @@ onMount(() => {
     position: absolute;
     inset: 0;
     overflow: hidden;
+    /* Pixi eventMode does not propagate to children; this CSS guard blocks all hit-testing. */
     pointer-events: none;
     background: var(--bg);
   }

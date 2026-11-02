@@ -37,7 +37,6 @@ export class AttractPlayback {
     await this.scene.init(host, new RoomEvents(), {
       resolution: ATTRACT_RENDER_RESOLUTION,
       maxFPS: ATTRACT_FPS,
-      interactive: false,
     });
     if (this.destroyed) {
       this.scene.destroy();

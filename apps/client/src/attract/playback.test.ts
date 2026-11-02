@@ -40,7 +40,6 @@ describe("AttractPlayback lifecycle", () => {
     expect(scene.init).toHaveBeenCalledExactlyOnceWith(host, expect.anything(), {
       resolution: ATTRACT_RENDER_RESOLUTION,
       maxFPS: ATTRACT_FPS,
-      interactive: false,
     });
     expect(scene.drawRoom).toHaveBeenCalledOnce();
     expect(scene.syncOccupants).toHaveBeenCalledOnce();

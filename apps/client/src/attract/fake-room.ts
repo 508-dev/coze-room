@@ -7,11 +7,12 @@ export const ATTRACT_ROOM: RoomSpec = {
   id: "attract-backdrop",
   name: "",
   capacity: 3,
+  packId: "dormouse-v0",
   seats: [
-    { id: "couch-l", kind: "couch", pose: "sit", x: 180, y: 300, depth: 2 },
-    { id: "couch-r", kind: "couch", pose: "sit", x: 250, y: 300, depth: 2 },
-    { id: "beanbag", kind: "beanbag", pose: "sit", x: 380, y: 340, depth: 3 },
-    { id: "hammock", kind: "hammock", pose: "lie", x: 480, y: 250, depth: 1 },
+    { id: "couch-l", kind: "couch", pose: "sit", x: 42, y: 59, depth: 59 },
+    { id: "couch-r", kind: "couch", pose: "sit", x: 65, y: 60, depth: 60 },
+    { id: "beanbag", kind: "beanbag", pose: "sit", x: 18, y: 64, depth: 64 },
+    { id: "hammock", kind: "hammock", pose: "lie", x: 104, y: 62, depth: 62 },
   ],
 };
 

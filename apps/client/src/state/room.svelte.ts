@@ -1,6 +1,7 @@
 import type { ClientMessage, Occupant, RoomSpec } from "@dormouse/protocol";
+import { normalizePrivateCode } from "@dormouse/protocol";
 import { createClientFeatures } from "../features/registry";
-import { Connection } from "../net/connection";
+import { Connection, type RoomTarget } from "../net/connection";
 import { RoomEvents } from "../room/events";
 
 const DRIFT_AFTER_MS = 10 * 60 * 1000;
@@ -12,6 +13,7 @@ export class RoomState {
   occupants = $state<Occupant[]>([]);
   drifting = $state(false);
   connected = $state(false);
+  roomClosed = $state(false);
   asleepCount = $derived(this.occupants.filter((o) => o.asleep).length);
   readonly features = createClientFeatures();
   readonly events = new RoomEvents();
@@ -21,11 +23,35 @@ export class RoomState {
   private idleTimer: ReturnType<typeof setTimeout> | undefined;
 
   join(roomId: string): void {
+    this.connect({ roomId });
+  }
+
+  joinByCode(code: string): void {
+    this.connect({ code: normalizePrivateCode(code) });
+  }
+
+  dismissClosedRoom(): void {
     this.dispose();
-    const connection = new Connection(roomId, {
-      name: "guest",
-      look: { tone: 0, head: 0, top: 0, accessory: 0 },
-    });
+    this.roomClosed = false;
+  }
+
+  private connect(target: RoomTarget): void {
+    this.dispose();
+    this.roomClosed = false;
+    this.connected = false;
+    this.selfId = null;
+    this.room = null;
+    this.occupants = [];
+    const connection = new Connection(
+      target,
+      {
+        name: "guest",
+        look: { tone: 0, head: 0, top: 0, accessory: 0 },
+      },
+      () => {
+        if (this.connection === connection) this.roomClosed = true;
+      },
+    );
     this.connection = connection;
     this.cleanup = Object.values(this.features).map((feature) =>
       feature.register(this, connection),

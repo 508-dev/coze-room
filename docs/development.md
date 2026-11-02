@@ -45,6 +45,12 @@ After an art revision, run `bun run art:manifest` (Python 3 standard library onl
 Vitest invokes its Python unit tests and checks that the committed manifest is
 byte-identical to regenerated output. See `frontend.md` for the feature sections.
 
+Private rooms are created with `POST /rooms/private`, which returns `{ roomId,
+code }`, and joined with `/ws?code=word-word-word`. Codes are case-insensitive
+and accept spaces in place of hyphens. They never appear in `/rooms` or health
+counts. Creation and code-join attempts have separate per-IP fixed-window limits;
+set `TRUST_PROXY=1` only when the server is behind a trusted reverse proxy.
+
 ## How to add a server/protocol feature
 
 Keep transport and room lifetime independent of feature logic:

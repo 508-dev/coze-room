@@ -2,6 +2,7 @@ import type { AvatarLook, ClientMessage, ServerMessage } from "@dormouse/protoco
 import { decode, encode } from "@dormouse/protocol";
 
 export type Handler = (message: ServerMessage) => void;
+export type RoomTarget = { roomId: string } | { code: string };
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ??
@@ -21,15 +22,17 @@ export class Connection {
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
-    private readonly roomId: string,
+    private readonly target: RoomTarget,
     private readonly identity: { name: string; look: AvatarLook },
+    private readonly onRoomClosed?: () => void,
   ) {}
 
   connect(): void {
     if (this.closed) return;
     const url = new URL("/ws", API_BASE);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-    url.searchParams.set("room", this.roomId);
+    if ("code" in this.target) url.searchParams.set("code", this.target.code);
+    else url.searchParams.set("room", this.target.roomId);
 
     const socket = new WebSocket(url);
     this.socket = socket;
@@ -44,8 +47,13 @@ export class Connection {
       if (message) for (const handler of this.handlers) handler(message);
     });
 
-    socket.addEventListener("close", () => {
+    socket.addEventListener("close", (event) => {
       if (this.closed) return;
+      if (event.code === 4004) {
+        this.closed = true;
+        this.onRoomClosed?.();
+        return;
+      }
       // Backoff caps at 10s. There is no hurry; nobody is watching.
       const delay = Math.min(10_000, 500 * 2 ** this.retry++);
       this.retryTimer = setTimeout(() => this.connect(), delay);

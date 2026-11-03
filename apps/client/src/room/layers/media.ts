@@ -47,7 +47,7 @@ export function createMediaLayer(): SceneLayer {
     if (!next) return;
     request = new AbortController();
     try {
-      const response = await fetch(next, { signal: request.signal });
+      const response = await fetch(next, { mode: "cors", signal: request.signal });
       if (!response.ok) return;
       const buffer = await response.arrayBuffer();
       if (version !== generation) return;

@@ -21,8 +21,8 @@ const item = {
   sourceFile: "sources/quiet-film.mp4",
   licence: "Public domain (US)",
   rightsEvidence: "Published in the US in 1920.",
-  checkedBy: "Test — pending human review",
-  checkedAt: "2026-11-02",
+  checkedBy: "Test research; Test reviewer (rights sign-off)",
+  checkedAt: "2026-11-03",
 };
 
 describe("catalogue validation", () => {
@@ -56,7 +56,10 @@ describe("catalogue validation", () => {
     expect(catalogue.items).toHaveLength(5);
     expect(catalogue.items.some((entry) => !entry.silent)).toBe(true);
     for (const entry of catalogue.items) {
-      expect(entry.checkedBy).toContain("pending human review");
+      expect(entry.checkedBy).toContain("Kimi K3.1 Pro (research)");
+      expect(entry.checkedBy).toContain("DeepSeek V4 Pro (verification review)");
+      expect(entry.checkedBy).toContain("Caleb Rogers (rights sign-off)");
+      expect(entry.checkedAt).toBe("2026-11-03");
       expect(entry.rightsEvidence.length).toBeGreaterThan(30);
     }
   });

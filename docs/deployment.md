@@ -70,7 +70,7 @@ PostgreSQL is private to the Coolify destination network. Its generated
 credentials are stored only in Coolify, and the application has `DATABASE_URL`.
 The guestbook (#77) is its only consumer; if the database is unreachable at
 boot, the guestbook runs in memory instead. Scheduled backups are **not
-configured yet**.
+configured yet** and remain an explicit **TODO before public launch**.
 
 ### Redeploy
 
@@ -228,5 +228,6 @@ before the first Android release, and `fdroid-publish.sh` depends on its
 - Children's access assessment.
 - DSA Article 13 legal representative in an EU member state.
 - Published security contact (already in `SECURITY.md`).
+- **TODO:** scheduled PostgreSQL backups; none are configured yet.
 
 These are tracked in `docs/backlog.md`.

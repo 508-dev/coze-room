@@ -1,6 +1,7 @@
 # Dormouse — design, plan of record
 
-> Status: agreed 2026-10-29. Name pending final trademark/domain clearance.
+> Status: agreed 2026-10-29. Name pending final trademark clearance; v0.1
+> hosting decided 2026-11-03.
 > This document captures decisions and the reasons behind them. When a decision
 > changes, change it here and say why.
 
@@ -487,7 +488,7 @@ stays past the novelty.
 | Preset chat bubbles, no voice-over | [#60](https://github.com/508-dev/coze-room/issues/60) | done ([#73](https://github.com/508-dev/coze-room/pull/73)) |
 | Seat-based occupants, awake/asleep, procedural motion | [#54](https://github.com/508-dev/coze-room/issues/54) | done ([#71](https://github.com/508-dev/coze-room/pull/71), [#72](https://github.com/508-dev/coze-room/pull/72)) |
 | Three seats: couch, beanbag, hammock | — | done (four, as data) |
-| Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | built ([#67](https://github.com/508-dev/coze-room/pull/67), [#75](https://github.com/508-dev/coze-room/pull/75)); TV stays off until R2 ([#61](https://github.com/508-dev/coze-room/issues/61)) and human sign-off on the rights evidence |
+| Five catalogue titles with timestamp sync | [#57](https://github.com/508-dev/coze-room/issues/57) | built ([#67](https://github.com/508-dev/coze-room/pull/67), [#75](https://github.com/508-dev/coze-room/pull/75)); rights sign-off complete (2026-11-03); TV stays off until R2 ([#61](https://github.com/508-dev/coze-room/issues/61)) |
 | Ambient audio bed | [#58](https://github.com/508-dev/coze-room/issues/58) | done ([#70](https://github.com/508-dev/coze-room/pull/70), [#78](https://github.com/508-dev/coze-room/pull/78)) |
 | Guestbook | [#56](https://github.com/508-dev/coze-room/issues/56) | done ([#77](https://github.com/508-dev/coze-room/pull/77)) |
 | Drift-off mode | — | done (throttle + dim) |
@@ -498,8 +499,10 @@ Supporting work, all `v0.1-blocker`: the art pipeline
 and hosting
 ([#61](https://github.com/508-dev/coze-room/issues/61)). The app is live at
 <https://dormouse.508.dev> on Coolify, deploying from `main`
-([`deployment.md`](deployment.md)); the `dormouse.house` domain and the R2 media
-bucket are still to do.
+([`deployment.md`](deployment.md)). v0.1 stays on **`dormouse.508.dev`**;
+`dormouse.house` is deferred for cost. The R2 media bucket is still to do, and
+its custom domain will be **`dormouse-media.508.dev`**, a single-level
+`508.dev` subdomain covered by the zone's Universal SSL certificate.
 
 The riskiest assumption is not technical. It is **"a still room containing
 sleeping strangers is pleasant to be in."** That is testable in weeks, before

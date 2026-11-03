@@ -1,6 +1,5 @@
 import { S3Client } from "bun";
 import {
-  contentType,
   getMediaPaths,
   loadCatalogue,
   log,
@@ -8,6 +7,7 @@ import {
   readR2Config,
   requireFiles,
   selectItems,
+  uploadR2File,
 } from "./lib.ts";
 
 async function main() {
@@ -31,7 +31,7 @@ async function main() {
         throw new Error(`Cannot derive an R2 key for ${path}`);
       }
       log(`Uploading ${item.id}: ${key}`);
-      await client.file(key).write(Bun.file(path), { type: contentType(path) });
+      await uploadR2File(client.file(key), path);
       log(`${config.publicBaseUrl}/${key}`);
     }
   }

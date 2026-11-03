@@ -93,10 +93,12 @@ $effect(() => {
   {#key url}
     {#if url && mode === "video"}
       <!-- svelte-ignore a11y_media_has_caption (catalogue films have no caption rendition) -->
-      <video class="film" src={url} controls playsinline preload="metadata"
-        aria-label={media.item?.title} use:playback onerror={() => { unavailable = true; }}></video>
+      <video class="film" src={url} crossorigin="anonymous" controls playsinline preload="metadata"
+        hidden={unavailable} aria-label={media.item?.title} use:playback
+        onerror={() => { unavailable = true; }}></video>
     {:else if url && mode === "audio"}
-      <audio src={url} preload="metadata" use:playback onerror={() => { unavailable = true; }}></audio>
+      <audio src={url} crossorigin="anonymous" preload="metadata" use:playback
+        onerror={() => { unavailable = true; }}></audio>
     {/if}
   {/key}
   {#if mode !== "off" && unavailable}<p class="notice">The TV is resting. Please try again later.</p>{/if}

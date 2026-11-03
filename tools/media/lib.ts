@@ -3,6 +3,7 @@ import { readFile, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { S3File } from "bun";
 
 export const DEFAULT_GIF_WIDTH = 64;
 export const DEFAULT_GIF_FPS = 8;
@@ -401,5 +402,24 @@ export function contentType(path: string): string {
       return "application/json";
     default:
       throw new Error(`No content type configured for ${path}`);
+  }
+}
+
+// Keys use stable catalogue ids, so replaced renditions must become visible promptly.
+export const MEDIA_CACHE_CONTROL = "public, max-age=3600";
+
+export async function uploadR2File(file: S3File, path: string): Promise<void> {
+  // Bun's S3 write() cannot set Cache-Control; a presigned PUT streams the same
+  // file while allowing the object-metadata header R2 needs.
+  const response = await fetch(file.presign({ method: "PUT", expiresIn: 300 }), {
+    method: "PUT",
+    body: Bun.file(path),
+    headers: {
+      "Cache-Control": MEDIA_CACHE_CONTROL,
+      "Content-Type": contentType(path),
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`R2 upload failed for ${path}: ${response.status} ${response.statusText}`);
   }
 }

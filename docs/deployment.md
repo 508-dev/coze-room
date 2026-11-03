@@ -37,10 +37,10 @@ Large mirrored media remains outside the image.
 
 `VITE_MEDIA_BASE_URL` is a Coolify **build-time-only** variable passed to the
 client build as a Docker build argument. It is deliberately empty until R2 is
-provisioned, which disables TV playback. Set it to the public custom media
-origin and redeploy to enable media. The R2 bucket will also need a CORS policy
-allowing `GET` from `https://dormouse.508.dev` so the browser can decode GIF
-previews.
+provisioned, which disables TV playback. Set it to
+`https://dormouse-media.508.dev` and redeploy to enable media. The R2 bucket
+also needs the CORS policy below so browsers can decode GIF previews and route
+cross-origin media elements through Web Audio.
 
 ### Proxy and client IPs
 
@@ -121,6 +121,71 @@ attached the zero-egress story does not materialise.
 
 Storage is the only media cost: a 500-hour 480p catalogue is about 225 GB,
 roughly $3.40/month.
+
+### R2 provisioning and upload runbook
+
+The upload tool never provisions R2. In Cloudflare, create the
+`dormouse-media` bucket, then:
+
+1. Attach **`dormouse-media.508.dev`** as the bucket's custom domain. Use a
+   single-level `508.dev` subdomain because the zone's Universal SSL certificate
+   covers `*.508.dev` only one level deep. Do not use `r2.dev`.
+2. Apply this bucket CORS policy:
+
+   ```json
+   [
+     {
+       "AllowedOrigins": ["https://dormouse.508.dev"],
+       "AllowedMethods": ["GET", "HEAD"],
+       "AllowedHeaders": ["Range"],
+       "ExposeHeaders": ["Content-Length", "Content-Range", "Accept-Ranges", "ETag"],
+       "MaxAgeSeconds": 86400
+     }
+   ]
+   ```
+
+3. Create an R2 API token with **Object Read & Write**, restricted to the
+   `dormouse-media` bucket. Set these values in the upload operator's local
+   `.env`; keep the credentials out of git:
+
+   ```text
+   R2_ACCOUNT_ID=
+   R2_ACCESS_KEY_ID=
+   R2_SECRET_ACCESS_KEY=
+   R2_BUCKET=dormouse-media
+   R2_PUBLIC_BASE_URL=https://dormouse-media.508.dev
+   ```
+
+4. After ingest, upload one title or all five from the repository root:
+
+   ```bash
+   bun run tools/media/upload.ts example
+   bun run tools/media/upload.ts --all
+   ```
+
+   Uploads use `Cache-Control: public, max-age=3600`. Keys are stable catalogue
+   ids, not content hashes, so a moderate one-hour cache lets replacements
+   propagate; long-lived `immutable` caching would be incorrect without
+   versioned keys. Re-uploading also applies the header to older objects.
+5. Set Coolify's **build-time**
+   `VITE_MEDIA_BASE_URL=https://dormouse-media.508.dev` and redeploy the
+   application. The client must be rebuilt; a runtime-only variable is not
+   enough.
+6. Verify an uploaded id with a cross-origin range request:
+
+   ```bash
+   curl --fail-with-body --silent --show-error \
+     --dump-header - --output /dev/null \
+     -H 'Origin: https://dormouse.508.dev' \
+     -H 'Range: bytes=0-1023' \
+     https://dormouse-media.508.dev/example.mp4
+   ```
+
+   Check for **206 Partial Content**, `Access-Control-Allow-Origin:
+   https://dormouse.508.dev`, `Accept-Ranges: bytes`, and `Content-Range`.
+   Media/CORS failures degrade to the client's resting-TV unavailable state.
+   The ingest and rendition details are in
+   [`tools/media/README.md`](../tools/media/README.md).
 
 ## Scale path
 

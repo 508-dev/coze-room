@@ -1,12 +1,14 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import {
   contentType,
   getMediaPaths,
   loadCatalogue,
+  MEDIA_CACHE_CONTROL,
   parseCatalogue,
   parseCliArguments,
   readR2Config,
   selectItems,
+  uploadR2File,
 } from "./lib.ts";
 
 const item = {
@@ -110,5 +112,30 @@ describe("R2 upload configuration", () => {
   test("uses the configured bucket without creating it", () => {
     expect(readR2Config(environment).bucket).toBe("bucket");
     expect(contentType("film.m4a")).toBe("audio/mp4");
+  });
+
+  test("uploads through a presigned PUT with a moderate cache lifetime", async () => {
+    const originalFetch = globalThis.fetch;
+    const presign = mock(() => "https://upload.example/signed");
+    const request = mock(async (_url: string | URL | Request, _init?: RequestInit) =>
+      Promise.resolve(new Response(null, { status: 200 })),
+    );
+    globalThis.fetch = request as unknown as typeof fetch;
+    try {
+      const file = { presign } as unknown as Parameters<typeof uploadR2File>[0];
+      await uploadR2File(file, "/media/renditions/quiet-film.mp4");
+      expect(presign).toHaveBeenCalledWith({ method: "PUT", expiresIn: 300 });
+      expect(request).toHaveBeenCalledTimes(1);
+      const [url, init] = request.mock.calls[0] ?? [];
+      expect(url).toBe("https://upload.example/signed");
+      expect(init?.method).toBe("PUT");
+      expect(init?.headers).toEqual({
+        "Cache-Control": MEDIA_CACHE_CONTROL,
+        "Content-Type": "video/mp4",
+      });
+      expect(MEDIA_CACHE_CONTROL).toBe("public, max-age=3600");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

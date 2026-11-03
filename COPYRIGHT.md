@@ -16,6 +16,14 @@ has to share those modifications. The client is GPL rather than AGPL because
 network-use copyleft is meaningless for code that runs in the user's own
 browser.
 
+## Bundled dormouse-v0 pack
+
+The `dormouse-v0` art is Copyright (c) 2026 **508.dev LLC, all rights
+reserved**. Caleb Rogers approved this licence for the bundled pack on
+**2026-11-03**. Its audio files are separate **CC0** sources, credited in
+[`packs/dormouse-v0/CREDITS.md`](packs/dormouse-v0/CREDITS.md); they do not
+change the art licence.
+
 ## Third-party content
 
 The private-room code word list in `apps/server/src/private-codes.ts` is original

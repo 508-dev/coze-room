@@ -11,8 +11,8 @@
       "sourceFile": "sources/market-street.webm",
       "licence": "Public domain (US copyright expired)",
       "rightsEvidence": "US film by the Miles Brothers, published in 1906. The Library of Congress record (LCCN 00694408) records a contemporary 28 April 1906 advertisement (https://www.loc.gov/item/00694408/). Wikimedia Commons marks this exact file PD-US because US copyright has expired (https://commons.wikimedia.org/wiki/File:A_Trip_down_market_street_(1906).webm#Licensing). Publication in the US before 1930 places it in the US public domain. The mirrored VP8-only file has no soundtrack or restoration claim.",
-      "checkedBy": "Kimi K3.1 Pro — pending human review",
-      "checkedAt": "2026-11-02",
+      "checkedBy": "Kimi K3.1 Pro (research); DeepSeek V4 Pro (verification review); Caleb Rogers (rights sign-off)",
+      "checkedAt": "2026-11-03",
       "previewStartSeconds": 30
     },
     {
@@ -25,8 +25,8 @@
       "sourceFile": "sources/new-york-hat.webm",
       "licence": "Public domain (US copyright expired)",
       "rightsEvidence": "US Biograph production released 5 December 1912. Silent Era's Progressive Silent Film List records that release date and 'Current rights holder: Public domain [USA]' (https://www.silentera.com/PSFL/data/N/NewYorkHat1912.html). Wikimedia Commons marks this exact file PD-US-expired (https://commons.wikimedia.org/wiki/File:The_New_York_Hat.webm#Licensing). US publication in 1912, before 1930, means its US copyright has expired. The mirrored file is a YouTube-derived Commons transfer (video2commons), VP8 with no audio stream; the human reviewer should eyeball it for added intertitles or tinting.",
-      "checkedBy": "Kimi K3.1 Pro — pending human review",
-      "checkedAt": "2026-11-02",
+      "checkedBy": "Kimi K3.1 Pro (research); DeepSeek V4 Pro (verification review); Caleb Rogers (rights sign-off)",
+      "checkedAt": "2026-11-03",
       "previewStartSeconds": 30
     },
     {
@@ -39,8 +39,8 @@
       "sourceFile": "sources/times-building.webm",
       "licence": "Public domain (US copyright expired)",
       "rightsEvidence": "US silent short by American Mutoscope and Biograph, published in 1905. The Library of Congress credits Wallace McCutcheon as camera, not director, and records United States, American Mutoscope and Biograph, 1905, with copyright registered 11 April 1905 (https://www.loc.gov/item/00694370/). Wikimedia Commons identifies the date, author, and US origin and marks this exact file PD-US because its US copyright has expired (https://commons.wikimedia.org/wiki/File:Panorama_from_Times_Building,_New_York.webm#Licensing). US publication in 1905, before 1930, places it in the US public domain. The mirrored file is a YouTube-derived Commons transfer (video2commons), VP8 with no audio stream; the human reviewer should eyeball it for added intertitles or tinting. The duration difference (mirrored 166.9 seconds versus LOC's '2:04 at 15 fps') is likely due to the transfer frame rate.",
-      "checkedBy": "Kimi K3.1 Pro — pending human review",
-      "checkedAt": "2026-11-02"
+      "checkedBy": "Kimi K3.1 Pro (research); DeepSeek V4 Pro (verification review); Caleb Rogers (rights sign-off)",
+      "checkedAt": "2026-11-03"
     },
     {
       "id": "spring",
@@ -53,8 +53,8 @@
       "licence": "CC BY 4.0",
       "rightsEvidence": "The canonical project page is https://studio.blender.org/projects/spring/. The official Blender Studio Spring about page states that the open movie is released under Creative Commons Attribution 4.0, including commercial reuse with attribution, and that exceptions are clearly indicated (https://studio.blender.org/projects/spring/pages/about/). The licence is https://creativecommons.org/licenses/by/4.0/. No exception applies to the mirrored film file or its original score.",
       "attribution": "Spring — © Blender Foundation | cloud.blender.org/spring. Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/. Dormouse transcodes the film and generates a short GIF excerpt.",
-      "checkedBy": "Kimi K3.1 Pro — pending human review",
-      "checkedAt": "2026-11-02",
+      "checkedBy": "Kimi K3.1 Pro (research); DeepSeek V4 Pro (verification review); Caleb Rogers (rights sign-off)",
+      "checkedAt": "2026-11-03",
       "previewStartSeconds": 30
     },
     {
@@ -68,8 +68,8 @@
       "licence": "Public domain (US NASA content)",
       "rightsEvidence": "NASA's Scientific Visualization Studio released this as SVS 5570 on 21 July 2025, with no third-party copyright exception on the item page (https://svs.gsfc.nasa.gov/5570/). NASA's media usage guidelines state that NASA video generally is not subject to US copyright and identify how third-party exceptions are marked (https://www.nasa.gov/nasa-brand-center/images-and-media/). The mirrored visualization contains no people or audio; Dormouse must not imply NASA endorsement.",
       "attribution": "Spinning Earth with clouds, atmosphere, and night lights — NASA's Scientific Visualization Studio. Visualization by Kel Elkins (USRA). https://svs.gsfc.nasa.gov/5570/. Dormouse transcodes the visualization and generates a short GIF excerpt.",
-      "checkedBy": "Kimi K3.1 Pro — pending human review",
-      "checkedAt": "2026-11-02"
+      "checkedBy": "Kimi K3.1 Pro (research); DeepSeek V4 Pro (verification review); Caleb Rogers (rights sign-off)",
+      "checkedAt": "2026-11-03"
     }
   ]
 }
